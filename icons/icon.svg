@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Filament spool">
+  <rect width="512" height="512" rx="96" fill="#0F1420"/>
+  <circle cx="256" cy="256" r="184" fill="#FFA854"/>
+  <circle cx="256" cy="256" r="166" fill="#FF7A1A"/>
+  <circle cx="256" cy="256" r="90" fill="#FFA854"/>
+  <circle cx="256" cy="256" r="69" fill="#1C2436"/>
+  <circle cx="256" cy="131" r="27" fill="#1C2436"/>
+  <circle cx="364" cy="318" r="27" fill="#1C2436"/>
+  <circle cx="148" cy="318" r="27" fill="#1C2436"/>
+</svg>
