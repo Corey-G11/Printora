@@ -1,5 +1,6 @@
-/* FilaHub service worker — offline-first caching */
-const CACHE = "filahub-v1";
+/* FilaHub service worker — network-first so updates appear as soon as you're online,
+   with a cached fallback that keeps the app working fully offline. */
+const CACHE = "filahub-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -29,16 +30,17 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
-  // Only handle same-origin app assets; let external links (model sites) hit the network.
+  // Let external links (model sites) hit the network directly.
   if (new URL(req.url).origin !== self.location.origin) return;
+  // Network-first: serve the freshest version when online, refresh the cache,
+  // and fall back to the cached copy (or the app shell) when offline.
   e.respondWith(
-    caches.match(req).then((cached) =>
-      cached ||
-      fetch(req).then((res) => {
+    fetch(req)
+      .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         return res;
-      }).catch(() => caches.match("./index.html"))
-    )
+      })
+      .catch(() => caches.match(req).then((cached) => cached || caches.match("./index.html")))
   );
 });
