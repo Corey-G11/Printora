@@ -41,7 +41,9 @@
       btn.type = "button";
       btn.innerHTML = it.head + '<span class="chev" aria-hidden="true">▾</span>';
       const body = el("div", "acc-body");
-      body.innerHTML = it.body;
+      const inner = el("div", "acc-inner");
+      inner.innerHTML = it.body;
+      body.append(inner);
       btn.addEventListener("click", () => card.classList.toggle("open"));
       card.append(btn, body);
       wrap.append(card);
@@ -55,7 +57,7 @@
   routes.home = function () {
     view.innerHTML = "";
     view.append(el("div", "hero", `
-      <div class="hero-badge">🧵</div>
+      <div class="hero-badge"><span>🧵</span></div>
       <h1>FilaHub</h1>
       <p>Your one-stop shop for everything 3D printing — setups, models, guides & fixes.</p>
     `));

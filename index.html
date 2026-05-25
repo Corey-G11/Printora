@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>FilaHub — 3D Printing Hub</title>
   <meta name="description" content="Your one-stop 3D printing app: filament setups, where to find printables, how-to guides, joining parts, and troubleshooting." />
-  <meta name="theme-color" content="#0f1420" />
+  <meta name="theme-color" content="#070912" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -17,11 +17,19 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div class="bg" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="blob blob-a"></div>
+    <div class="blob blob-b"></div>
+    <div class="blob blob-c"></div>
+    <div class="bg-vignette"></div>
+  </div>
+
   <header class="topbar">
     <img src="icons/icon.svg" alt="" />
-    <b>FilaHub</b>
+    <b class="brand">FilaHub</b>
     <span class="spacer"></span>
-    <span class="tag">3D Printing Hub</span>
+    <span class="tag">3D&nbsp;PRINT&nbsp;HUB</span>
   </header>
 
   <main id="view"><!-- rendered by app.js --></main>
