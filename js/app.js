@@ -351,10 +351,22 @@
     if (routes[r]) go(r);
   });
 
-  // register service worker for offline use
+  // register service worker for offline use + auto-update so new versions
+  // never get stuck behind a stale cache
   if ("serviceWorker" in navigator) {
+    const hadController = !!navigator.serviceWorker.controller;
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      // reload only when replacing an existing worker (an update), not first install
+      if (hadController) window.location.reload();
+    });
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        reg.update();
+        setInterval(() => reg.update(), 30 * 60 * 1000); // re-check every 30 min
+      }).catch(() => {});
     });
   }
 })();
