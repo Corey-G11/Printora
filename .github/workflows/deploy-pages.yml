@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - claude/3d-printing-mobile-app-krD3h
   workflow_dispatch:
 
 permissions:
