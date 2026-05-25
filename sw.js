@@ -1,6 +1,6 @@
 /* FilaHub service worker — network-first so updates appear as soon as you're online,
    with a cached fallback that keeps the app working fully offline. */
-const CACHE = "filahub-v2";
+const CACHE = "filahub-v3";
 const ASSETS = [
   "./",
   "./index.html",
