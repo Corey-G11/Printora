@@ -1,6 +1,6 @@
 {
-  "name": "FilaHub — 3D Printing Hub",
-  "short_name": "FilaHub",
+  "name": "Printora — 3D Printing Hub",
+  "short_name": "Printora",
   "description": "Your one-stop 3D printing app: filament setups, printables, how-to guides, joining parts, and troubleshooting.",
   "start_url": "./index.html",
   "scope": "./",
