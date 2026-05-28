@@ -591,10 +591,29 @@ DB.shop = {
   note: "As an Amazon Associate, Printora earns from qualifying purchases. Links open live Amazon search results.",
   categories: [
     {
+      name: "Recommended Starter Kit",
+      emoji: "⭐",
+      intro: "Buy these 10 things and you're set up for your first 6 months of printing.",
+      items: [
+        { name: "1. Bambu A1 mini (starter printer)",     query: "bambu lab a1 mini 3d printer" },
+        { name: "2. PLA filament — 5-pack assorted",      query: "pla filament 1.75mm 5 pack" },
+        { name: "3. Digital calipers (6\")",              query: "digital calipers 150mm stainless" },
+        { name: "4. Print removal scraper",                query: "3d print removal scraper spatula" },
+        { name: "5. Elmer's purple glue stick (3-pack)",   query: "elmer's purple glue stick 3 pack" },
+        { name: "6. Flush cutters",                        query: "flush cutters wire side cutter" },
+        { name: "7. Metric hex / Allen key set",           query: "metric hex key set ball end" },
+        { name: "8. Nozzle cleaning needle set",           query: "0.4mm nozzle cleaning needles set" },
+        { name: "9. Isopropyl alcohol 99 % (bed cleaner)", query: "isopropyl alcohol 99 percent quart" },
+        { name: "10. Sunlu S2 filament dryer",             query: "sunlu filament dryer s2" }
+      ]
+    },
+    {
       name: "Filament",
       emoji: "🧵",
       items: [
+        { name: "Bambu PLA Basic (premium brand)", query: "bambu lab pla basic filament" },
         { name: "PLA filament (1.75 mm)",        query: "pla filament 1.75mm" },
+        { name: "PLA multi-colour 6-pack",       query: "pla filament 1.75mm multi color 6 pack" },
         { name: "PLA+ / tough PLA",              query: "pla plus filament 1.75mm" },
         { name: "Silk PLA (shiny finish)",       query: "silk pla filament 1.75mm" },
         { name: "PETG filament",                 query: "petg filament 1.75mm" },
@@ -611,6 +630,7 @@ DB.shop = {
       items: [
         { name: "Brass 0.4 mm nozzles (assorted)", query: "0.4mm brass nozzle mk8 assortment" },
         { name: "Hardened steel nozzles (CF/GF)",  query: "hardened steel nozzle 0.4mm" },
+        { name: "Bambu hotend assembly (spare)",   query: "bambu lab hotend assembly" },
         { name: "Capricorn PTFE tube (Bowden)",    query: "capricorn ptfe bowden tube 1.75mm" },
         { name: "Silicone hotend sock",            query: "silicone hotend sock v6 mk8" },
         { name: "Nozzle cleaning needles",         query: "0.4mm nozzle cleaning needles" }
@@ -622,6 +642,7 @@ DB.shop = {
       items: [
         { name: "PEI textured spring-steel sheet", query: "pei textured spring steel build plate" },
         { name: "Smooth PEI sheet",                query: "smooth pei spring steel build plate" },
+        { name: "Bambu textured PEI plate",        query: "bambu lab textured pei build plate" },
         { name: "Glue stick (Elmer's purple)",     query: "elmer's purple glue stick" },
         { name: "Magigoo / 3DLAC adhesive",        query: "magigoo 3d printing adhesive" },
         { name: "Hairspray (Aqua Net)",            query: "aqua net hairspray 3d printing" }
@@ -636,7 +657,10 @@ DB.shop = {
         { name: "Print removal scraper / spatula", query: "3d print removal scraper spatula" },
         { name: "Deburring tool",                  query: "deburring tool with blades" },
         { name: "Precision tweezers (anti-static)",query: "anti static precision tweezers set" },
-        { name: "Flush cutters",                   query: "flush cutters wire side cutter" }
+        { name: "Flush cutters",                   query: "flush cutters wire side cutter" },
+        { name: "Needle-nose pliers (mini)",       query: "mini needle nose pliers electronics" },
+        { name: "Print monitoring camera (Wyze)",  query: "wyze cam v3 indoor camera" },
+        { name: "Microfiber cleaning cloths",      query: "microfiber cleaning cloth pack" }
       ]
     },
     {
@@ -649,14 +673,17 @@ DB.shop = {
         { name: "5-minute epoxy",                  query: "5 minute epoxy 2 part" },
         { name: "Acetone (ABS welding / smoothing)", query: "100% pure acetone gallon" },
         { name: "Sandpaper assortment (120–2000)", query: "wet dry sandpaper assortment 120 2000" },
-        { name: "Filler primer (rattle can)",      query: "rust-oleum filler primer" }
+        { name: "Filler primer (rattle can)",      query: "rust-oleum filler primer" },
+        { name: "Loctite blue 242 (thread locker)",query: "loctite 242 blue threadlocker" }
       ]
     },
     {
       name: "Filament care & storage",
       emoji: "🌡️",
       items: [
-        { name: "Filament dryer (Sunlu / Eibos)",  query: "sunlu filament dryer s2" },
+        { name: "Filament dryer — Sunlu S2 (1-spool)",   query: "sunlu filament dryer s2" },
+        { name: "Filament dryer — Sunlu S4 (4-spool)",   query: "sunlu s4 filament dryer 4 spool" },
+        { name: "Eibos Cyclopes / Polymaker PolyDryer",  query: "eibos cyclopes filament dryer" },
         { name: "Vacuum bags + pump",              query: "filament vacuum storage bags" },
         { name: "Rechargeable silica gel",         query: "rechargeable silica gel desiccant" },
         { name: "Hygrometer",                      query: "mini digital hygrometer" }
@@ -676,8 +703,11 @@ DB.shop = {
       name: "Printers — entry recommendations",
       emoji: "🖨️",
       items: [
-        { name: "Bambu A1 mini",                   query: "bambu lab a1 mini 3d printer" },
+        { name: "Bambu A1 mini (best beginner)",   query: "bambu lab a1 mini 3d printer" },
         { name: "Bambu A1",                        query: "bambu lab a1 3d printer" },
+        { name: "Bambu A1 Combo (with AMS lite)",  query: "bambu lab a1 combo ams lite" },
+        { name: "Bambu P1S (enclosed, mid)",       query: "bambu lab p1s 3d printer" },
+        { name: "Bambu X1C (pro, all filaments)",  query: "bambu lab x1c carbon 3d printer" },
         { name: "Creality Ender 3 V3",             query: "creality ender 3 v3" },
         { name: "Anycubic Kobra 2 / 3",            query: "anycubic kobra 2" },
         { name: "Sovol SV06 / SV08",               query: "sovol sv06" }
