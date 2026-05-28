@@ -81,10 +81,14 @@
     view.append(el("h2", "h2", "Explore"));
     const grid = el("div", "grid");
     const cards = [
+      { t: "Beginner Hub", d: "Brand new? Start here — 8-step path", i: "🚀", go: "beginners" },
       { t: "Filament Setups", d: "Temps & slicer settings per material", i: "🎛️", go: "setups" },
+      { t: "Printer ↔ Filament", d: "Which printer can print what", i: "🧬", go: "compat" },
       { t: "Find Models", d: "Where to download printables + ideas", i: "📦", go: "models" },
+      { t: "Tools & AI Apps", d: "Meshy, CAD, slicers, mesh repair", i: "🪄", go: "tools" },
       { t: "How-To Guides", d: "Printing, finishing & joining parts", i: "📖", go: "guides" },
       { t: "Troubleshooting", d: "Diagnose & fix print problems", i: "🩹", go: "fix" },
+      { t: "Shop Essentials", d: "Filament, nozzles, tools & more", i: "🛒", go: "shop" },
       { t: "Material Compare", d: "Strength, heat, flex side by side", i: "📊", go: "compare" },
       { t: "Cost Calculator", d: "Estimate filament cost per print", i: "🧮", go: "calc" },
       { t: "Glossary", d: "Every 3D-printing term explained", i: "📚", go: "glossary" }
@@ -263,6 +267,101 @@
     return (Math.round(n * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  function amazonLink(query) {
+    const region = (DB.shop && DB.shop.region) || "com";
+    const tag = (DB.shop && DB.shop.affiliateTag) ? "&tag=" + encodeURIComponent(DB.shop.affiliateTag) : "";
+    return `https://www.amazon.${region}/s?k=${encodeURIComponent(query)}${tag}`;
+  }
+
+  /* ---------- BEGINNER HUB ---------- */
+  routes.beginners = function () {
+    view.innerHTML = section("Beginner Hub", "Brand new to 3D printing? Follow these 8 steps.");
+    const wrap = el("ol", "steps beginner");
+    DB.beginnerSteps.forEach((s) => {
+      const li = document.createElement("li");
+      let html = `<b>${esc(s.title)}</b><span>${esc(s.summary)}</span>
+        <ul>${s.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`;
+      if (s.link) {
+        html += `<a class="step-link" href="#${esc(s.link.route)}">${esc(s.link.label)} →</a>`;
+      }
+      li.innerHTML = html;
+      wrap.append(li);
+    });
+    view.append(wrap);
+    view.append(el("p", "foot-note", "Once you've worked through these, the rest of Printora is your reference for life."));
+  };
+
+  /* ---------- TOOLS ---------- */
+  routes.tools = function () {
+    view.innerHTML = section("Tools & AI Apps", "Software for designing, slicing, fixing & generating models");
+    DB.toolCategories.forEach((cat) => {
+      view.append(el("h2", "h2", `${cat.emoji} ${cat.name}`));
+      if (cat.intro) view.append(el("p", "section-intro", cat.intro));
+      const grid = el("div", "grid");
+      cat.items.forEach((it) => {
+        const node = it.url
+          ? Object.assign(document.createElement("a"), { href: it.url, target: "_blank", rel: "noopener noreferrer" })
+          : document.createElement("div");
+        node.className = "nav-card";
+        node.innerHTML = `<span class="nc-ico">${cat.emoji}</span>
+          <span class="nc-txt"><b>${esc(it.name)}</b><small>${esc(it.desc)}</small></span>
+          <span class="nc-go">${it.url ? "↗" : ""}</span>`;
+        grid.append(node);
+      });
+      view.append(grid);
+    });
+    view.append(el("p", "foot-note", "External links open in a new tab. Always verify a slicer profile matches your printer before slicing."));
+  };
+
+  /* ---------- PRINTER ↔ FILAMENT COMPATIBILITY ---------- */
+  routes.compat = function () {
+    view.innerHTML = section("Printer ↔ Filament Compatibility", "Which printer class can print what");
+    const legend = el("div", "compat-legend");
+    Object.values(DB.compat.legend).forEach((v) => legend.append(el("span", "compat-legend-item", esc(v))));
+    view.append(legend);
+
+    const items = DB.compat.classes.map((cls) => {
+      const grid = `<div class="compat-grid">` +
+        DB.compat.filaments.map((f) => {
+          const code = cls.caps[f] || "no";
+          const sym = { yes: "✅", maybe: "⚠️", no: "❌" }[code];
+          return `<div class="compat-cell c-${code}"><b>${esc(f)}</b><span>${sym}</span></div>`;
+        }).join("") + "</div>";
+      const notes = `<h4>Notes</h4><ul>${cls.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`;
+      const detail = `<div class="note"><b>Hardware:</b> ${esc(cls.detail)}</div>
+                      <div class="note"><b>Examples:</b> ${esc(cls.examples)}</div>`;
+      return {
+        head: `<span class="acc-emoji">🖨️</span><span class="acc-title"><b>${esc(cls.name)}</b><small>${esc(cls.detail)}</small></span>`,
+        body: detail + grid + notes
+      };
+    });
+    view.append(accordion(items));
+    view.append(el("p", "foot-note", "Examples are popular printers in each class, not endorsements. Always check the spec sheet of the exact model."));
+  };
+
+  /* ---------- SHOP ---------- */
+  routes.shop = function () {
+    view.innerHTML = section("Shop Essentials", "Tap any item to search live on Amazon");
+    view.append(el("div", "note", `<b>Heads up:</b> ${esc(DB.shop.note)}`));
+    DB.shop.categories.forEach((cat) => {
+      view.append(el("h2", "h2", `${cat.emoji} ${cat.name}`));
+      const list = el("div", "grid");
+      cat.items.forEach((it) => {
+        const a = document.createElement("a");
+        a.href = amazonLink(it.query);
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.className = "nav-card";
+        a.innerHTML = `<span class="nc-ico">${cat.emoji}</span>
+          <span class="nc-txt"><b>${esc(it.name)}</b><small>amazon.${esc(DB.shop.region)} · "${esc(it.query)}"</small></span>
+          <span class="nc-go">↗</span>`;
+        list.append(a);
+      });
+      view.append(list);
+    });
+    view.append(el("p", "foot-note", "Links open Amazon search results — current pricing, current reviews, no dead URLs. Set DB.shop.region to your country (uk / de / ca / etc.) or add an affiliate tag to monetise."));
+  };
+
   /* ---------- SEARCH ---------- */
   let INDEX = null;
   function buildIndex() {
@@ -294,6 +393,26 @@
       text: (c.name + " " + c.ideas.join(" ")).toLowerCase(),
       go: "models"
     }));
+    (DB.beginnerSteps || []).forEach((s) => INDEX.push({
+      type: "Beginner", icon: "🚀", title: s.title, sub: s.summary,
+      text: [s.title, s.summary, s.points.join(" ")].join(" ").toLowerCase(),
+      go: "beginners"
+    }));
+    (DB.toolCategories || []).forEach((cat) => cat.items.forEach((it) => INDEX.push({
+      type: "Tool", icon: cat.emoji, title: it.name, sub: it.desc,
+      text: [it.name, it.desc, cat.name].join(" ").toLowerCase(),
+      go: "tools"
+    })));
+    (DB.compat ? DB.compat.classes : []).forEach((cls) => INDEX.push({
+      type: "Compat", icon: "🖨️", title: cls.name, sub: cls.examples,
+      text: [cls.name, cls.detail, cls.examples, cls.notes.join(" ")].join(" ").toLowerCase(),
+      go: "compat"
+    }));
+    (DB.shop ? DB.shop.categories : []).forEach((cat) => cat.items.forEach((it) => INDEX.push({
+      type: "Shop", icon: cat.emoji, title: it.name, sub: `Shop on Amazon · ${cat.name}`,
+      text: [it.name, it.query, cat.name].join(" ").toLowerCase(),
+      go: "shop"
+    })));
     return INDEX;
   }
 
@@ -323,7 +442,7 @@
     window.scrollTo(0, 0);
     routes[route]();
     // highlight active tab (map sub-routes back to their tab)
-    const tabFor = { compare: "setups", calc: "home", glossary: "home" };
+    const tabFor = { compare: "setups", calc: "home", glossary: "home", beginners: "home", tools: "home", compat: "home", shop: "home" };
     const active = tabFor[route] || route;
     document.querySelectorAll(".tab").forEach((t) =>
       t.classList.toggle("active", t.dataset.route === active));
@@ -353,7 +472,7 @@
 
   // register service worker for offline use + auto-update so new versions
   // never get stuck behind a stale cache
-  if ("serviceWorker" in navigator) {
+  if (navigator.serviceWorker) {
     const hadController = !!navigator.serviceWorker.controller;
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
