@@ -498,8 +498,66 @@ button { font-family: inherit; cursor: pointer; }
 
 @media (min-width: 560px) { .ach-grid { grid-template-columns: repeat(3, 1fr); } }
 
+/* ============================================================
+   PHASE 1 — share button, install banner, tip card
+   ============================================================ */
+.icon-btn {
+  display: grid; place-items: center; width: 34px; height: 34px; flex: none;
+  background: var(--glass-2); border: 1px solid var(--stroke-2); border-radius: 50%;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  color: var(--cyan); font-size: 16px; font-weight: 800; cursor: pointer; margin-left: 8px;
+  transition: transform .08s var(--ease), border-color .2s, box-shadow .2s;
+}
+.icon-btn:hover  { border-color: var(--cyan); box-shadow: 0 0 14px rgba(34, 211, 238, .35); }
+.icon-btn:active { transform: scale(.93); }
+
+.tip-card {
+  position: relative; margin: 16px 0 0;
+  padding: 14px 16px 16px; border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 138, 43, .12), rgba(139, 92, 246, .10));
+  border: 1px solid rgba(255, 138, 43, .35);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: 0 0 22px rgba(255, 138, 43, .12);
+  overflow: hidden;
+}
+.tip-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(80% 60% at 100% 0%, rgba(255, 138, 43, .25), transparent 70%);
+  pointer-events: none;
+}
+.tip-label {
+  display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: 1.4px;
+  color: var(--orange); text-transform: uppercase;
+  background: rgba(255, 138, 43, .12); padding: 4px 10px; border-radius: 999px;
+  border: 1px solid rgba(255, 138, 43, .4);
+}
+.tip-card p { margin: 9px 0 0; font-size: 14px; line-height: 1.55; color: #e6ecf8; }
+
+.install-banner {
+  position: fixed; left: 12px; right: 12px;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 16px); z-index: 35;
+  display: flex; align-items: center; gap: 12px; padding: 13px 14px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(20, 28, 46, .96), rgba(34, 211, 238, .14));
+  -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(34, 211, 238, .4);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .55), 0 0 28px rgba(34, 211, 238, .25);
+  transform: translateY(160%); transition: transform .45s var(--ease);
+}
+.install-banner.show { transform: translateY(0); }
+.install-banner .ib-ico { font-size: 26px; }
+.install-banner .ib-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.install-banner .ib-txt b     { font-size: 14.5px; color: var(--cyan); font-weight: 800; }
+.install-banner .ib-txt small { font-size: 12.5px; color: var(--txt); }
+.install-banner .ib-x {
+  background: transparent; color: var(--muted); border: 0; font-size: 24px;
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer; line-height: 1;
+}
+.install-banner .ib-x:active { background: rgba(255, 255, 255, .08); transform: scale(.92); }
+
 /* ---------- accessibility ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .acc-body { transition: none; }
+  .install-banner { transition: none; }
 }

@@ -99,6 +99,7 @@
   function updateStreak() {
     const today = todayStr();
     if (!PROGRESS.firstVisit) PROGRESS.firstVisit = today;
+    const before = PROGRESS.streakDays;
     if (PROGRESS.lastVisit === today) { /* same day */ }
     else if (PROGRESS.lastVisit) {
       const days = Math.round((Date.parse(today) - Date.parse(PROGRESS.lastVisit)) / 86400000);
@@ -107,6 +108,7 @@
       PROGRESS.streakDays = 1;
     }
     PROGRESS.lastVisit = today;
+    if (PROGRESS.streakDays > before && before > 0) _streakUp = PROGRESS.streakDays;
     saveProgress();
   }
   function level()      { return Math.floor(PROGRESS.xp / 100) + 1; }
@@ -210,10 +212,68 @@
     setTimeout(() => burst.remove(), 1500);
   }
 
+  /* ============================================================
+     PHASE 1 — Share, install banner, tip-of-the-day, streak FX
+     ============================================================ */
+  let _streakUp = 0;
+
+  async function shareApp() {
+    const shareData = {
+      title: "Printora",
+      text: "Printora — your one-stop 3D printing app: setups, guides, models & shop.",
+      url: location.origin + location.pathname.replace(/\/[^/]*$/, "/")
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        showAchievementToast({ emoji: "🔗", name: "Link copied!" });
+        return;
+      } catch (e) {}
+    }
+    showAchievementToast({ emoji: "🔗", name: shareData.url });
+  }
+
+  function maybeShowInstallBanner() {
+    try { if (localStorage.getItem("printora-install-dismissed")) return; }
+    catch (e) { return; }
+    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return;
+    if (window.navigator.standalone) return;
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPhone|iPad|iPod/.test(ua);
+    const isAndroid = /Android/.test(ua);
+    if (!isIOS && !isAndroid) return;
+
+    const banner = el("div", "install-banner");
+    const how = isIOS
+      ? "Tap <b>Share</b> below → <b>Add to Home Screen</b>"
+      : "Open the <b>⋮ menu</b> → <b>Install app</b>";
+    banner.innerHTML = `
+      <span class="ib-ico">📲</span>
+      <span class="ib-txt"><b>Install Printora</b><small>${how}</small></span>
+      <button class="ib-x" type="button" aria-label="Dismiss">×</button>`;
+    banner.querySelector(".ib-x").addEventListener("click", () => {
+      banner.classList.remove("show");
+      try { localStorage.setItem("printora-install-dismissed", "1"); } catch (e) {}
+      setTimeout(() => banner.remove(), 400);
+    });
+    document.body.append(banner);
+    requestAnimationFrame(() => requestAnimationFrame(() => banner.classList.add("show")));
+  }
+
+  function tipOfTheDay() {
+    if (!DB.tips || !DB.tips.length) return "";
+    const day = Math.floor(Date.parse(todayStr()) / 86400000);
+    return DB.tips[((day % DB.tips.length) + DB.tips.length) % DB.tips.length];
+  }
+
   // expose for boot-time wire-up
   const Game = { PROGRESS, updateStreak, level, xpInLevel, refreshLevelPill,
                  trackRouteVisit, trackClick, ACHIEVEMENTS, checkAchievements,
-                 renderProgressInto };
+                 renderProgressInto, shareApp, maybeShowInstallBanner, tipOfTheDay };
 
   /* ---------- ROUTES ---------- */
   const routes = {};
@@ -231,6 +291,14 @@
     pCard.id = "progressCard";
     renderProgressInto(pCard);
     view.append(pCard);
+
+    // tip of the day
+    const tip = tipOfTheDay();
+    if (tip) {
+      const tipCard = el("div", "tip-card");
+      tipCard.innerHTML = `<span class="tip-label">💡 Tip of the Day</span><p>${esc(tip)}</p>`;
+      view.append(tipCard);
+    }
 
     // search
     const search = el("div", "search");
@@ -672,9 +740,19 @@
   refreshLevelPill();
   const pillEl = document.getElementById("lvlPill");
   if (pillEl) pillEl.addEventListener("click", () => go("achievements"));
+  const shareEl = document.getElementById("shareBtn");
+  if (shareEl) shareEl.addEventListener("click", shareApp);
   go((location.hash || "#home").slice(1));
   // welcome achievement fires on first ever launch
   checkAchievements();
+  // streak-up celebration (only when it actually increments)
+  if (_streakUp >= 2) {
+    setTimeout(() => showAchievementToast({
+      emoji: "🔥", name: `${_streakUp}-day streak!`
+    }), 700);
+  }
+  // mobile install banner (dismissable + persistent)
+  maybeShowInstallBanner();
   window.addEventListener("hashchange", () => {
     const r = location.hash.slice(1);
     if (routes[r]) go(r);

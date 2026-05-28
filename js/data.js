@@ -379,6 +379,36 @@ DB.quickRef = [
   { k: "Moving fit", v: "0.3 mm+ gap" }
 ];
 
+/* ---------- TIPS (rotated daily on Home) ---------- */
+DB.tips = [
+  "Clean your build plate before every print with soap and warm water — skin oils are the #1 cause of first-layer failures.",
+  "Calibrate your filament with a temperature tower the first time you open a new spool. Five minutes saves ten failed prints.",
+  "Print walls before infill: 3–5 perimeters add more strength than cranking infill above 25 %.",
+  "Drying filament fixes 70 % of mystery stringing problems. PETG and nylon especially.",
+  "Orient parts so load pulls *along* layers, not perpendicular to them — layer adhesion is the weakest axis.",
+  "PLA softens at 50–55 °C. Never leave a PLA print in a hot car.",
+  "Hardened-steel nozzle is mandatory for carbon-fibre or glass-fibre filaments. Brass wears out in days.",
+  "A small chamfer on the base of any printed part stops elephant's-foot bulge and looks more pro.",
+  "Print supports in tree mode for organic shapes — less material, easier to remove, prettier underside.",
+  "Slow the first layer to 50 % of normal speed. Everything after depends on that one layer.",
+  "Brim = adhesion. Raft = adhesion *and* a flat surface under a warpy print.",
+  "OrcaSlicer has built-in calibration tests for any printer. One click each, run them once.",
+  "PETG over-extrudes by default — try flow 95 % before raising the nozzle temp.",
+  "For watertight prints, use 5+ walls and vase mode for tall vessels.",
+  "If a print warps in the corners, raise the bed temp by 5 °C and disable first-layer fan.",
+  "M3 heat-set inserts are the hobby standard. Buy a 100-piece assortment once, you'll use them forever.",
+  "Lock-tite blue (242) on threaded inserts holds bolts tight without permanently bonding them.",
+  "A drop of CA glue + accelerator joins prints in 3 seconds. Epoxy fills gaps but takes 5+ minutes.",
+  "Acetone vapor smoothing only works on ABS / ASA. PLA needs solvent-free finishing (sanding + filler primer).",
+  "Don't iron over text or fine details — the ironing pass blurs them. Use it on flat top surfaces only.",
+  "Tolerance test print is the single most useful download — print one for every printer + filament combo.",
+  "PETG sticks too well to PEI. Add a glue-stick release layer or raise Z-offset slightly to protect the plate.",
+  "Print orientation matters more than infill for strength. Rotate the model 90° and a weak print becomes tough.",
+  "Vase mode (spiralize) turns a one-wall print into a watertight cup in minutes. Great for planters.",
+  "Keep filament in vacuum bags with rechargeable silica. Reduces stringing AND extends print quality on every spool."
+];
+
+
 /* ---------- BEGINNER HUB ---------- */
 DB.beginnerSteps = [
   {
