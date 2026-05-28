@@ -33,7 +33,7 @@
     return `<header class="page-head"><h1>${esc(title)}</h1>${sub ? `<p>${esc(sub)}</p>` : ""}</header>`;
   }
   function accordion(items) {
-    // items: [{key, head(html), body(html), open}]
+    // items: [{head, body, open, kind, id}] — kind/id award XP on first open
     const wrap = el("div", "acc");
     items.forEach((it) => {
       const card = el("div", "acc-item" + (it.open ? " open" : ""));
@@ -44,12 +44,176 @@
       const inner = el("div", "acc-inner");
       inner.innerHTML = it.body;
       body.append(inner);
-      btn.addEventListener("click", () => card.classList.toggle("open"));
+      btn.addEventListener("click", () => {
+        card.classList.toggle("open");
+        if (card.classList.contains("open") && it.kind && it.id) {
+          trackOpen(it.kind, it.id);
+        }
+      });
       card.append(btn, body);
       wrap.append(card);
     });
     return wrap;
   }
+
+  /* ============================================================
+     GAMIFICATION — XP, levels, streaks, achievements, toasts
+     ============================================================ */
+  const PROGRESS_KEY = "printora-progress-v1";
+  const XP_RULES = {
+    routeVisit: { beginners: 100, tools: 10, compat: 15, shop: 5, glossary: 10, compare: 10 },
+    open:       { setup: 15, guide: 20, fix: 15, models: 5, compat: 10 },
+    click:      { tool: 10, shop: 5 },
+    calc:       20
+  };
+  const ACHIEVEMENTS = [
+    { id: "welcome",            name: "Welcome Aboard",   emoji: "🚀", desc: "Open Printora for the first time" },
+    { id: "tool-explorer",      name: "Tool Explorer",    emoji: "🪄", desc: "Visit the Tools section" },
+    { id: "shopper",            name: "Smart Shopper",    emoji: "🛒", desc: "Browse the Shop" },
+    { id: "first-click",        name: "First Click",      emoji: "🔗", desc: "Tap any external link" },
+    { id: "material-scientist", name: "Material Scientist", emoji: "🧪", desc: "Open every filament setup" },
+    { id: "bookworm",           name: "Bookworm",         emoji: "📖", desc: "Open 5 guides" },
+    { id: "print-doctor",       name: "Print Doctor",     emoji: "🩺", desc: "Open 5 troubleshoots" },
+    { id: "compat-master",      name: "Compatibility Pro", emoji: "🧬", desc: "Check every printer class" },
+    { id: "streak-3",           name: "3-Day Streak",     emoji: "🔥", desc: "3 days in a row" },
+    { id: "streak-7",           name: "Week-Long Streak", emoji: "💥", desc: "7 days in a row" },
+    { id: "level-5",            name: "Halfway Hero",     emoji: "⭐", desc: "Reach Level 5" },
+    { id: "master",             name: "Printora Master",  emoji: "👑", desc: "Reach Level 10" }
+  ];
+
+  function defaultProgress() {
+    return { xp: 0, visited: [], achievements: [], streakDays: 0, lastVisit: null, firstVisit: null };
+  }
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(PROGRESS_KEY);
+      return raw ? Object.assign(defaultProgress(), JSON.parse(raw)) : defaultProgress();
+    } catch (e) { return defaultProgress(); }
+  }
+  function saveProgress() {
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(PROGRESS)); } catch (e) {}
+  }
+  let PROGRESS = loadProgress();
+
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function updateStreak() {
+    const today = todayStr();
+    if (!PROGRESS.firstVisit) PROGRESS.firstVisit = today;
+    if (PROGRESS.lastVisit === today) { /* same day */ }
+    else if (PROGRESS.lastVisit) {
+      const days = Math.round((Date.parse(today) - Date.parse(PROGRESS.lastVisit)) / 86400000);
+      PROGRESS.streakDays = (days === 1) ? PROGRESS.streakDays + 1 : 1;
+    } else {
+      PROGRESS.streakDays = 1;
+    }
+    PROGRESS.lastVisit = today;
+    saveProgress();
+  }
+  function level()      { return Math.floor(PROGRESS.xp / 100) + 1; }
+  function xpInLevel()  { return PROGRESS.xp - (level() - 1) * 100; }
+
+  function award(id, xp) {
+    if (!xp || xp <= 0) return;
+    if (PROGRESS.visited.indexOf(id) !== -1) return;
+    PROGRESS.visited.push(id);
+    PROGRESS.xp += xp;
+    saveProgress();
+    refreshLevelPill();
+    refreshHomeProgressCard();
+    checkAchievements();
+    if (navigator.vibrate) try { navigator.vibrate(8); } catch (e) {}
+  }
+  function trackOpen(kind, id)   { award(`open:${kind}:${id}`, XP_RULES.open[kind]); }
+  function trackClick(kind, id)  { award(`click:${kind}:${id}`, XP_RULES.click[kind]); }
+  function trackRouteVisit(name) { const xp = XP_RULES.routeVisit[name]; if (xp) award(`route:${name}`, xp); }
+
+  function checkAchievements() {
+    const has = (a) => PROGRESS.achievements.indexOf(a) !== -1;
+    const unlock = (id) => {
+      if (has(id)) return;
+      PROGRESS.achievements.push(id);
+      saveProgress();
+      const def = ACHIEVEMENTS.find((a) => a.id === id);
+      if (def) showAchievementToast(def);
+    };
+    const cnt = (prefix) => PROGRESS.visited.filter((v) => v.indexOf(prefix) === 0).length;
+
+    unlock("welcome");
+    if (PROGRESS.visited.indexOf("route:tools") !== -1) unlock("tool-explorer");
+    if (PROGRESS.visited.indexOf("route:shop")  !== -1) unlock("shopper");
+    if (PROGRESS.visited.some((v) => v.indexOf("click:") === 0)) unlock("first-click");
+    if (cnt("open:setup:") >= (DB.materials && DB.materials.length || 6)) unlock("material-scientist");
+    if (cnt("open:guide:") >= 5) unlock("bookworm");
+    if (cnt("open:fix:")   >= 5) unlock("print-doctor");
+    if (cnt("open:compat:") >= (DB.compat ? DB.compat.classes.length : 4)) unlock("compat-master");
+    if (PROGRESS.streakDays >= 3) unlock("streak-3");
+    if (PROGRESS.streakDays >= 7) unlock("streak-7");
+    if (level() >= 5)  unlock("level-5");
+    if (level() >= 10) unlock("master");
+  }
+
+  function refreshLevelPill() {
+    const pill = document.getElementById("lvlPill");
+    if (pill) pill.innerHTML = `Lv ${level()} · ${PROGRESS.xp} XP`;
+  }
+  function refreshHomeProgressCard() {
+    const card = document.getElementById("progressCard");
+    if (card) renderProgressInto(card);
+  }
+  function renderProgressInto(card) {
+    const lvl = level(), inLvl = xpInLevel();
+    card.innerHTML = `
+      <div class="pc-top">
+        <span class="pc-level">Lv ${lvl}</span>
+        <span class="pc-xp">${PROGRESS.xp} XP</span>
+        <span class="pc-streak" title="day streak">🔥 ${PROGRESS.streakDays}d</span>
+      </div>
+      <div class="xp-bar"><i style="width:${inLvl}%"></i></div>
+      <div class="pc-bottom">
+        <span>${inLvl}/100 to Lv ${lvl + 1}</span>
+        <button class="pc-ach" type="button">🏆 ${PROGRESS.achievements.length}/${ACHIEVEMENTS.length}</button>
+      </div>`;
+    const ach = card.querySelector(".pc-ach");
+    if (ach) ach.addEventListener("click", () => go("achievements"));
+  }
+
+  let _toastTimer = null;
+  function showAchievementToast(def) {
+    let toast = document.getElementById("toast");
+    if (!toast) {
+      toast = el("div", "toast");
+      toast.id = "toast";
+      document.body.append(toast);
+    }
+    toast.innerHTML = `<span class="t-emoji">${def.emoji}</span>
+      <span class="t-txt"><b>Achievement unlocked!</b><span>${esc(def.name)}</span></span>`;
+    burstConfetti(toast);
+    // double rAF to ensure transition triggers
+    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add("show")));
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+  }
+  function burstConfetti(anchor) {
+    const colors = ["#22d3ee", "#8b5cf6", "#ec4899", "#ff8a2b", "#34f5c5"];
+    const burst = el("div", "confetti");
+    for (let i = 0; i < 16; i++) {
+      const p = document.createElement("i");
+      p.style.background = colors[i % colors.length];
+      const a = Math.random() * 360;
+      const r = 60 + Math.random() * 35;
+      p.style.setProperty("--dx", Math.cos(a * Math.PI / 180) * r + "px");
+      p.style.setProperty("--dy", Math.sin(a * Math.PI / 180) * r + "px");
+      p.style.animationDelay = (Math.random() * 0.12) + "s";
+      burst.append(p);
+    }
+    anchor.append(burst);
+    setTimeout(() => burst.remove(), 1500);
+  }
+
+  // expose for boot-time wire-up
+  const Game = { PROGRESS, updateStreak, level, xpInLevel, refreshLevelPill,
+                 trackRouteVisit, trackClick, ACHIEVEMENTS, checkAchievements,
+                 renderProgressInto };
 
   /* ---------- ROUTES ---------- */
   const routes = {};
@@ -61,6 +225,12 @@
       <h1>Printora</h1>
       <p>Your one-stop shop for everything 3D printing — setups, models, guides & fixes.</p>
     `));
+
+    // progress card
+    const pCard = el("div", "progress-card");
+    pCard.id = "progressCard";
+    renderProgressInto(pCard);
+    view.append(pCard);
 
     // search
     const search = el("div", "search");
@@ -81,6 +251,7 @@
     view.append(el("h2", "h2", "Explore"));
     const grid = el("div", "grid");
     const cards = [
+      { t: "Achievements", d: "Your level, XP, streak & unlocked badges", i: "🏆", go: "achievements" },
       { t: "Beginner Hub", d: "Brand new? Start here — 8-step path", i: "🚀", go: "beginners" },
       { t: "Filament Setups", d: "Temps & slicer settings per material", i: "🎛️", go: "setups" },
       { t: "Printer ↔ Filament", d: "Which printer can print what", i: "🧬", go: "compat" },
@@ -109,6 +280,7 @@
   routes.setups = function () {
     view.innerHTML = section("Filament Setups", "Tap a material for full slicer settings & tips");
     const items = DB.materials.map((m) => ({
+      kind: "setup", id: m.id,
       head: `<span class="acc-emoji">${m.emoji}</span>
              <span class="acc-title"><b>${esc(m.name)}</b><small>${esc(m.tagline)}</small></span>
              <span class="pill pill-${diffClass(m.difficulty)}">${esc(m.difficulty)}</span>`,
@@ -175,12 +347,14 @@
       const a = el("a", "nav-card");
       a.href = s.url; a.target = "_blank"; a.rel = "noopener noreferrer";
       a.innerHTML = `<span class="nc-ico">🔗</span><span class="nc-txt"><b>${esc(s.name)}</b><small>${esc(s.desc)}</small></span><span class="nc-go">↗</span>`;
+      a.addEventListener("click", () => trackClick("tool", s.name));
       sites.append(a);
     });
     view.append(sites);
 
     view.append(el("h2", "h2", "💡 What to print"));
     const items = DB.modelCategories.map((c) => ({
+      kind: "models", id: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       head: `<span class="acc-emoji">${c.emoji}</span><span class="acc-title"><b>${esc(c.name)}</b></span>`,
       body: "<ul>" + c.ideas.map((i) => `<li>${esc(i)}</li>`).join("") + "</ul>"
     }));
@@ -195,6 +369,7 @@
       if (!guides.length) return;
       view.append(el("h2", "h2", `${cat.emoji} ${cat.name}`));
       const items = guides.map((g) => ({
+        kind: "guide", id: g.id,
         head: `<span class="acc-emoji">${g.emoji}</span><span class="acc-title"><b>${esc(g.title)}</b><small>${esc(g.summary)}</small></span>`,
         body: guideBody(g)
       }));
@@ -216,6 +391,7 @@
   routes.fix = function () {
     view.innerHTML = section("Troubleshooting", "Pick the symptom you're seeing");
     const items = DB.troubleshooting.map((t) => ({
+      kind: "fix", id: t.id,
       head: `<span class="acc-emoji">${t.emoji}</span><span class="acc-title"><b>${esc(t.symptom)}</b></span>`,
       body: `<h4>Likely causes</h4><ul>${t.causes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
              <h4>✅ Fixes (try in order)</h4><ol class="fixes">${t.fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ol>`
@@ -257,6 +433,7 @@
       if (!(g >= 0) || !(price >= 0)) { out.textContent = "Enter values to see the cost."; return; }
       const cost = (price / spool) * g;
       const perKg = price / spool * 1000;
+      award("calc:used", XP_RULES.calc);
       out.innerHTML = `<span class="big">${fmtMoney(cost)}</span>
         <small>${g} g × ${fmtMoney(perKg)}/kg</small>`;
     };
@@ -306,6 +483,7 @@
         node.innerHTML = `<span class="nc-ico">${cat.emoji}</span>
           <span class="nc-txt"><b>${esc(it.name)}</b><small>${esc(it.desc)}</small></span>
           <span class="nc-go">${it.url ? "↗" : ""}</span>`;
+        if (it.url) node.addEventListener("click", () => trackClick("tool", it.name));
         grid.append(node);
       });
       view.append(grid);
@@ -331,6 +509,7 @@
       const detail = `<div class="note"><b>Hardware:</b> ${esc(cls.detail)}</div>
                       <div class="note"><b>Examples:</b> ${esc(cls.examples)}</div>`;
       return {
+        kind: "compat", id: cls.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
         head: `<span class="acc-emoji">🖨️</span><span class="acc-title"><b>${esc(cls.name)}</b><small>${esc(cls.detail)}</small></span>`,
         body: detail + grid + notes
       };
@@ -355,11 +534,34 @@
         a.innerHTML = `<span class="nc-ico">${cat.emoji}</span>
           <span class="nc-txt"><b>${esc(it.name)}</b><small>amazon.${esc(DB.shop.region)} · "${esc(it.query)}"</small></span>
           <span class="nc-go">↗</span>`;
+        a.addEventListener("click", () => trackClick("shop", it.name));
         list.append(a);
       });
       view.append(list);
     });
     view.append(el("p", "foot-note", "Tap any item to open Amazon search results — current pricing, current reviews, always up to date."));
+  };
+
+  /* ---------- ACHIEVEMENTS ---------- */
+  routes.achievements = function () {
+    const unlocked = PROGRESS.achievements.length;
+    view.innerHTML = section("Achievements", `${unlocked} of ${ACHIEVEMENTS.length} unlocked · Lv ${level()} · ${PROGRESS.xp} XP`);
+    const stats = el("div", "ach-stats");
+    stats.innerHTML = `
+      <div class="ach-stat"><b>${level()}</b><span>Level</span></div>
+      <div class="ach-stat"><b>${PROGRESS.xp}</b><span>Total XP</span></div>
+      <div class="ach-stat"><b>${PROGRESS.streakDays}</b><span>Day Streak</span></div>
+      <div class="ach-stat"><b>${unlocked}/${ACHIEVEMENTS.length}</b><span>Achievements</span></div>`;
+    view.append(stats);
+    const grid = el("div", "ach-grid");
+    ACHIEVEMENTS.forEach((a) => {
+      const got = PROGRESS.achievements.indexOf(a.id) !== -1;
+      const card = el("div", "ach-card" + (got ? "" : " locked"));
+      card.innerHTML = `<span class="ach-emoji">${got ? a.emoji : "🔒"}</span>
+        <span class="ach-text"><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span>`;
+      grid.append(card);
+    });
+    view.append(grid);
   };
 
   /* ---------- SEARCH ---------- */
@@ -441,14 +643,16 @@
     if (!routes[route]) route = "home";
     window.scrollTo(0, 0);
     routes[route]();
+    trackRouteVisit(route);
     // highlight active tab (map sub-routes back to their tab)
-    const tabFor = { compare: "setups", calc: "home", glossary: "home", beginners: "home", tools: "home", compat: "home", shop: "home" };
+    const tabFor = { compare: "setups", calc: "home", glossary: "home", beginners: "home",
+                     tools: "home", compat: "home", shop: "home", achievements: "home" };
     const active = tabFor[route] || route;
     document.querySelectorAll(".tab").forEach((t) =>
       t.classList.toggle("active", t.dataset.route === active));
     location.hash = route;
   }
-  window.Printora = { go };
+  window.Printora = { go, PROGRESS, ACHIEVEMENTS };
 
   function buildTabBar() {
     const bar = $("#tabbar");
@@ -464,7 +668,13 @@
 
   /* ---------- BOOT ---------- */
   buildTabBar();
+  updateStreak();
+  refreshLevelPill();
+  const pillEl = document.getElementById("lvlPill");
+  if (pillEl) pillEl.addEventListener("click", () => go("achievements"));
   go((location.hash || "#home").slice(1));
+  // welcome achievement fires on first ever launch
+  checkAchievements();
   window.addEventListener("hashchange", () => {
     const r = location.hash.slice(1);
     if (routes[r]) go(r);

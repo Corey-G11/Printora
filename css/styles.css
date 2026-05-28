@@ -370,6 +370,134 @@ button { font-family: inherit; cursor: pointer; }
 .compat-cell.c-no    { background: rgba(255, 107, 138, .08); border-color: rgba(255, 107, 138, .30); }
 @media (min-width: 520px) { .compat-grid { grid-template-columns: repeat(7, 1fr); } }
 
+/* ============================================================
+   GAMIFICATION — level pill, progress card, XP bar, toast,
+   confetti, achievements grid
+   ============================================================ */
+.level-pill {
+  font-size: 11px; font-weight: 800; letter-spacing: .6px; color: var(--cyan);
+  border: 1px solid rgba(34, 211, 238, .4); padding: 6px 11px; border-radius: 999px;
+  background: rgba(34, 211, 238, .1); box-shadow: 0 0 14px rgba(34, 211, 238, .2) inset;
+  cursor: pointer; transition: transform .08s var(--ease), border-color .2s, box-shadow .2s;
+}
+.level-pill:active { transform: scale(.94); }
+.level-pill:hover { border-color: var(--cyan); box-shadow: 0 0 16px rgba(34, 211, 238, .35); }
+
+.progress-card {
+  background: var(--glass-2); border: 1px solid var(--stroke-2); border-radius: 18px;
+  padding: 16px 17px; margin: 16px 0 4px;
+  position: relative; overflow: hidden;
+  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: 0 0 28px rgba(139, 92, 246, .14);
+}
+.progress-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  padding: 1px; background: var(--grad-cool); opacity: .55;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+}
+.pc-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.pc-level {
+  font-size: 13px; font-weight: 800; padding: 5px 11px; border-radius: 999px;
+  background: var(--grad-cool); color: #04141a;
+  box-shadow: 0 0 14px rgba(34, 211, 238, .4); letter-spacing: .3px;
+}
+.pc-xp     { font-size: 14px; color: var(--txt); font-weight: 700; flex: 1; }
+.pc-streak { font-size: 13px; color: var(--orange); font-weight: 700;
+             padding: 4px 9px; border-radius: 999px; background: rgba(255, 138, 43, .12);
+             border: 1px solid rgba(255, 138, 43, .3); }
+.xp-bar {
+  height: 10px; border-radius: 6px; background: rgba(255, 255, 255, .08);
+  overflow: hidden; margin: 4px 0 8px; position: relative;
+}
+.xp-bar i {
+  display: block; height: 100%; background: var(--grad-cool);
+  box-shadow: 0 0 12px rgba(139, 92, 246, .5);
+  transition: width .7s var(--ease);
+}
+.pc-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: var(--muted);
+}
+.pc-ach {
+  background: rgba(139, 92, 246, .15); color: var(--violet);
+  border: 1px solid rgba(139, 92, 246, .45); border-radius: 999px;
+  padding: 6px 13px; font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: transform .08s var(--ease), background .2s;
+}
+.pc-ach:active { transform: scale(.96); background: rgba(139, 92, 246, .25); }
+
+/* achievement toast */
+.toast {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 14px);
+  transform: translate(-50%, -160%); z-index: 100;
+  display: flex; align-items: center; gap: 13px;
+  min-width: 260px; max-width: 92vw;
+  background: rgba(20, 28, 46, .92);
+  -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--stroke-2); border-radius: 18px; padding: 14px 17px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .7), 0 0 36px rgba(139, 92, 246, .4);
+  transition: transform .45s var(--ease);
+  pointer-events: none;
+}
+.toast.show { transform: translate(-50%, 0); }
+.toast .t-emoji { font-size: 30px; filter: drop-shadow(0 0 8px rgba(255, 255, 255, .35)); }
+.toast .t-txt   { display: flex; flex-direction: column; gap: 2px; }
+.toast .t-txt b { font-size: 10.5px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1.4px; }
+.toast .t-txt span { font-size: 15.5px; color: var(--txt); font-weight: 800; }
+
+/* confetti burst */
+.confetti { position: absolute; left: 50%; top: 50%; pointer-events: none; width: 0; height: 0; }
+.confetti i {
+  position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 2px;
+  opacity: 0; animation: confetti-pop .95s var(--ease) forwards;
+}
+@keyframes confetti-pop {
+  0%   { transform: translate(-50%, -50%) scale(.6) rotate(0deg); opacity: 0; }
+  12%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0) rotate(720deg); opacity: 0; }
+}
+
+/* achievements page */
+.ach-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-bottom: 14px;
+}
+.ach-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 12px 4px; border-radius: 14px;
+  background: var(--glass); border: 1px solid var(--stroke);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.ach-stat b {
+  font-size: 22px; font-weight: 900;
+  background: var(--grad-cool); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 1px 6px rgba(34, 211, 238, .35));
+}
+.ach-stat span { font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .6px; font-weight: 700; }
+
+.ach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+.ach-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--glass); border: 1px solid var(--stroke); border-radius: 16px; padding: 13px;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  transition: transform .15s var(--ease);
+}
+.ach-card:not(.locked) {
+  border-color: rgba(34, 211, 238, .4);
+  box-shadow: 0 0 22px rgba(34, 211, 238, .18);
+}
+.ach-card.locked { opacity: .5; filter: grayscale(.65); }
+.ach-emoji {
+  font-size: 30px; width: 52px; height: 52px; flex: none;
+  display: grid; place-items: center; border-radius: 14px;
+  background: var(--glass-2); border: 1px solid var(--stroke);
+}
+.ach-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ach-text b { font-size: 14px; font-weight: 800; }
+.ach-text small { color: var(--muted); font-size: 12px; }
+
+@media (min-width: 560px) { .ach-grid { grid-template-columns: repeat(3, 1fr); } }
+
 /* ---------- accessibility ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
