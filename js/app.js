@@ -359,7 +359,7 @@
       });
       view.append(list);
     });
-    view.append(el("p", "foot-note", "Links open Amazon search results — current pricing, current reviews, no dead URLs. Set DB.shop.region to your country (uk / de / ca / etc.) or add an affiliate tag to monetise."));
+    view.append(el("p", "foot-note", "Tap any item to open Amazon search results — current pricing, current reviews, always up to date."));
   };
 
   /* ---------- SEARCH ---------- */

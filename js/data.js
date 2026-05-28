@@ -586,9 +586,9 @@ DB.compat = {
 /* Search-URL pattern is intentional: it always returns current best-matches and
    you can plug in your own affiliate tag later via DB.shop.affiliateTag.        */
 DB.shop = {
-  region: "com",        // change to co.uk / de / ca / etc. for your market
-  affiliateTag: "",     // e.g. "yourtag-20" — appended as &tag= if set
-  note: "These are live Amazon search links (not affiliate). Set DB.shop.region for your country, or fill in DB.shop.affiliateTag to monetise.",
+  region: "com",                  // change to co.uk / de / ca / etc. for your market
+  affiliateTag: "coreyfalls-20",  // Amazon Associates tracking ID, appended as &tag=
+  note: "As an Amazon Associate, Printora earns from qualifying purchases. Links open live Amazon search results.",
   categories: [
     {
       name: "Filament",
