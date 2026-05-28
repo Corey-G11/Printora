@@ -1,5 +1,5 @@
 /* ============================================================
-   FilaHub — app shell, router and rendering
+   Printora — app shell, router and rendering
    ============================================================ */
 (function () {
   "use strict";
@@ -58,7 +58,7 @@
     view.innerHTML = "";
     view.append(el("div", "hero", `
       <div class="hero-badge"><span>🧵</span></div>
-      <h1>FilaHub</h1>
+      <h1>Printora</h1>
       <p>Your one-stop shop for everything 3D printing — setups, models, guides & fixes.</p>
     `));
 
@@ -329,7 +329,7 @@
       t.classList.toggle("active", t.dataset.route === active));
     location.hash = route;
   }
-  window.FilaHub = { go };
+  window.Printora = { go };
 
   function buildTabBar() {
     const bar = $("#tabbar");

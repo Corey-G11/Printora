@@ -1,5 +1,5 @@
 /* ============================================================
-   FilaHub — 3D printing knowledge base
+   Printora — 3D printing knowledge base
    All content lives here as plain data; app.js renders it.
    Settings are sensible *starting points* — always tune for
    your specific printer, filament brand and ambient conditions.

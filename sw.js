@@ -1,6 +1,6 @@
-/* FilaHub service worker — network-first so updates appear as soon as you're online,
+/* Printora service worker — network-first so updates appear as soon as you're online,
    with a cached fallback that keeps the app working fully offline. */
-const CACHE = "filahub-v4";
+const CACHE = "printora-v5";
 const ASSETS = [
   "./",
   "./index.html",
