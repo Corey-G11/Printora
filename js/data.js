@@ -378,3 +378,311 @@ DB.quickRef = [
   { k: "Sliding fit", v: "0.2 mm gap" },
   { k: "Moving fit", v: "0.3 mm+ gap" }
 ];
+
+/* ---------- BEGINNER HUB ---------- */
+DB.beginnerSteps = [
+  {
+    title: "Understand the basics",
+    summary: "Know what you're getting into before you spend a dime.",
+    points: [
+      "FDM (filament): cheap, easy, makes functional & display parts — start here.",
+      "Resin (SLA/DLP): gorgeous detail, messy chemicals — minis & jewellery.",
+      "A print is a model → sliced into G-code → printed layer by layer.",
+      "Expect to tinker. The first week is part assembly, part learning."
+    ],
+    link: { route: "glossary", label: "Read the glossary" }
+  },
+  {
+    title: "Pick your first printer",
+    summary: "Match the printer class to what you want to print.",
+    points: [
+      "PLA & PETG only? An entry-level open-frame is perfect (Bambu A1, Ender 3 V3, Anycubic Kobra).",
+      "Want ABS, ASA or fast quality prints? Get an enclosed CoreXY (Bambu P1S, Sovol SV08).",
+      "Engineering nylons / PC / carbon-fibre? You need a 300 °C+ enclosed pro (Bambu X1C, Prusa MK4S, Voron).",
+      "Buy from a reputable brand with active community support — saves you weeks of frustration."
+    ],
+    link: { route: "compat", label: "See the compatibility matrix" }
+  },
+  {
+    title: "Set it up properly",
+    summary: "Get bed level, Z-offset, and first layer dialled before printing anything ambitious.",
+    points: [
+      "Build the printer slowly, following every step. Loose belts/screws cause weeks of mystery problems.",
+      "Run the printer's auto-level / mesh and tune Z-offset on a first-layer test square.",
+      "Clean the build plate with soap & water or IPA before every print at first.",
+      "Print the included test model — it's pre-tuned for your machine."
+    ],
+    link: { route: "guides", label: "Open the leveling & first-layer guide" }
+  },
+  {
+    title: "Install a slicer",
+    summary: "The software that turns models into G-code.",
+    points: [
+      "Bambu printer → Bambu Studio (or OrcaSlicer, which is more powerful).",
+      "Prusa printer → PrusaSlicer.",
+      "Anything else → OrcaSlicer or Cura.",
+      "Pick the matching printer + filament profile, then change as little as possible at first."
+    ],
+    link: { route: "tools", label: "Browse slicers & tools" }
+  },
+  {
+    title: "Print your first model",
+    summary: "Start with something small, flat-bottomed and support-free.",
+    points: [
+      "Calibration cube, 3DBenchy, or a coaster — all good starters.",
+      "Use PLA, 0.2 mm layer height, 15 % infill, 3 walls.",
+      "Watch the first few layers. Squished-but-not-gappy lines = perfect.",
+      "Let the bed cool before removing — parts pop off easier."
+    ],
+    link: { route: "models", label: "Find models to print" }
+  },
+  {
+    title: "Calibrate for your filament",
+    summary: "Each spool prints slightly differently — a few tests save hours later.",
+    points: [
+      "Temperature tower (find the cleanest temp for that brand).",
+      "Retraction tower (eliminate stringing).",
+      "Flow / extrusion-multiplier test (fix over/under-extrusion).",
+      "OrcaSlicer has these built-in — one click each."
+    ],
+    link: { route: "fix", label: "Diagnose any issues" }
+  },
+  {
+    title: "Stay safe",
+    summary: "Boring but real — don't skip this.",
+    points: [
+      "Print ABS/ASA/Nylon in a ventilated room — fumes are unpleasant.",
+      "PLA is the safest filament for living spaces.",
+      "Hotend is 200 °C+. The bed gets to 100 °C. Don't touch mid-print.",
+      "Never leave a first print of the day unattended — fire is rare but real."
+    ],
+    link: null
+  },
+  {
+    title: "Join the community",
+    summary: "The fastest way to learn is to ask people who've already broken everything.",
+    points: [
+      "r/3Dprinting and r/FixMyPrint — huge Reddit communities, post photos of failed prints.",
+      "Printer-specific subreddits & Discords (Bambu, Prusa, Voron, etc.).",
+      "YouTube: CHEP, Maker's Muse, 3D Printing Nerd, Thomas Sanladerer.",
+      "Don't be afraid to ask 'beginner' questions — everyone was new once."
+    ],
+    link: null
+  }
+];
+
+/* ---------- TOOLS (software) ---------- */
+DB.toolCategories = [
+  {
+    name: "AI 3D Generators",
+    emoji: "🪄",
+    intro: "Generate 3D models from a text prompt or a photo. Great for ideas — clean up the mesh before printing.",
+    items: [
+      { name: "Meshy",      url: "https://www.meshy.ai",         desc: "Text-to-3D and image-to-3D. Free tier, then paid credits." },
+      { name: "Tripo3D",    url: "https://www.tripo3d.ai",       desc: "Fast AI mesh generation from a single image or prompt." },
+      { name: "CSM",        url: "https://www.csm.ai",           desc: "Common Sense Machines — image/video to 3D, more control over geometry." }
+    ]
+  },
+  {
+    name: "CAD & Modelling",
+    emoji: "📐",
+    intro: "Design parts that fit real-world dimensions. Start with Tinkercad, graduate to Onshape or Fusion 360.",
+    items: [
+      { name: "Tinkercad",     url: "https://www.tinkercad.com",                            desc: "Browser-based, free, drag-and-drop. Best beginner CAD." },
+      { name: "Onshape",       url: "https://www.onshape.com",                              desc: "Pro-grade parametric CAD in the browser. Free for hobby/public use." },
+      { name: "Fusion 360",    url: "https://www.autodesk.com/products/fusion-360/overview", desc: "Industry-standard CAD/CAM. Free personal-use licence." },
+      { name: "FreeCAD",       url: "https://www.freecad.org",                              desc: "Fully open-source parametric CAD." },
+      { name: "Blender",       url: "https://www.blender.org",                              desc: "Free, powerful, more artistic / sculpt-focused." },
+      { name: "Plasticity",    url: "https://www.plasticity.xyz",                           desc: "Modern indie CAD aimed at product/industrial design." }
+    ]
+  },
+  {
+    name: "Slicers",
+    emoji: "🔪",
+    intro: "Pick one matched to your printer. They all do the same job; differ in features and presets.",
+    items: [
+      { name: "OrcaSlicer",     url: "https://github.com/SoftFever/OrcaSlicer",                desc: "Most popular community slicer. Built-in calibration tests. Works with almost any printer." },
+      { name: "PrusaSlicer",    url: "https://www.prusa3d.com/page/prusaslicer_424",           desc: "Polished, stable, brilliant for Prusa machines and anything else." },
+      { name: "Bambu Studio",   url: "https://bambulab.com/en/download/studio",                desc: "Official slicer for Bambu Lab printers. Tight integration with AMS." },
+      { name: "UltiMaker Cura", url: "https://ultimaker.com/software/ultimaker-cura",          desc: "Long-standing slicer with a giant plugin ecosystem." },
+      { name: "SuperSlicer",    url: "https://github.com/supermerill/SuperSlicer",             desc: "PrusaSlicer fork with extra advanced controls." },
+      { name: "Chitubox",       url: "https://www.chitubox.com",                               desc: "For resin printers — the de-facto resin slicer." }
+    ]
+  },
+  {
+    name: "Mesh repair & utilities",
+    emoji: "🛠️",
+    intro: "Fix broken STLs, hollow models, scale, photo-to-print conversions.",
+    items: [
+      { name: "Netfabb (Online)", url: "https://www.formware.co/onlinestlrepair", desc: "Browser STL repair — fast triangle fixer." },
+      { name: "3D Builder",       url: "",                                       desc: "Free Windows app — quick mesh fixes & basic edits. Search 'Microsoft 3D Builder' in the Microsoft Store." },
+      { name: "Blender",          url: "https://www.blender.org",                desc: "Heavy-duty mesh cleanup, sculpting, decimation." }
+    ]
+  },
+  {
+    name: "Photos → Prints",
+    emoji: "🖼️",
+    intro: "Turn a photo into a printable physical object.",
+    items: [
+      { name: "3dp.rocks Lithophane", url: "https://3dp.rocks/lithophane",       desc: "Turn any photo into a printable lithophane (transparency-based picture)." },
+      { name: "ItsLitho",             url: "https://itslitho.com",               desc: "Curved & shaped lithophanes — cylinders, hearts, lampshades." }
+    ]
+  }
+];
+
+/* ---------- PRINTER ↔ FILAMENT COMPATIBILITY ---------- */
+DB.compat = {
+  legend: { yes: "✅ Works great", maybe: "⚠️ Needs mods", no: "❌ Won't print" },
+  filaments: ["PLA", "PETG", "TPU", "ABS/ASA", "Nylon", "PC", "CF/GF"],
+  classes: [
+    {
+      name: "Entry-level FDM",
+      detail: "Open frame · ~210–260 °C nozzle · Direct-drive optional",
+      examples: "Creality Ender 3 V3, Anycubic Kobra 2, Bambu A1 / A1 mini, Sovol SV06",
+      caps: { PLA:"yes", PETG:"yes", TPU:"maybe", "ABS/ASA":"maybe", Nylon:"no", PC:"no", "CF/GF":"maybe" },
+      notes: [
+        "Add an enclosure + glue stick to try ABS, but expect warping.",
+        "CF/GF blends require a hardened-steel nozzle — brass wears out fast.",
+        "TPU prints best on direct-drive; very slow on Bowden."
+      ]
+    },
+    {
+      name: "Enclosed CoreXY",
+      detail: "Enclosed · ~280–300 °C nozzle · Heated bed 100 °C+",
+      examples: "Bambu P1P / P1S, Sovol SV08, Elegoo Centauri Carbon, Anycubic Kobra 3 Combo",
+      caps: { PLA:"yes", PETG:"yes", TPU:"yes", "ABS/ASA":"yes", Nylon:"maybe", PC:"maybe", "CF/GF":"yes" },
+      notes: [
+        "Swap to a hardened or wear-resistant nozzle for CF/GF/glow filaments.",
+        "Dry Nylon/PC before printing — these are very moisture-sensitive.",
+        "Crack the door for PLA in a warm enclosure to keep cooling effective."
+      ]
+    },
+    {
+      name: "Pro / Engineering",
+      detail: "Enclosed · 300 °C+ · Hardened hotend · Heated chamber on some",
+      examples: "Bambu X1C, Prusa XL / MK4S, Voron 2.4, Qidi X-Max 3, Raise3D Pro",
+      caps: { PLA:"yes", PETG:"yes", TPU:"yes", "ABS/ASA":"yes", Nylon:"yes", PC:"yes", "CF/GF":"yes" },
+      notes: [
+        "A genuine heated chamber unlocks PC and high-temp blends without warping.",
+        "Run a hardened nozzle full-time if you swap to abrasives often.",
+        "Filament dry box / dryer is essential at this level."
+      ]
+    },
+    {
+      name: "Resin (SLA / MSLA)",
+      detail: "Photopolymer resin · UV-cured · No filament at all",
+      examples: "Elegoo Mars / Saturn, Anycubic Photon Mono, Phrozen Sonic Mini",
+      caps: { PLA:"no", PETG:"no", TPU:"no", "ABS/ASA":"no", Nylon:"no", PC:"no", "CF/GF":"no" },
+      notes: [
+        "Different world — uses liquid resin & UV light, not filament.",
+        "Best for minis, jewellery, ultra-detailed art. Needs gloves, mask, ventilation.",
+        "Standard, tough, flexible, water-washable & dental resins all exist."
+      ]
+    }
+  ]
+};
+
+/* ---------- SHOP (Amazon search links — never go dead, no affiliate) ---------- */
+/* Search-URL pattern is intentional: it always returns current best-matches and
+   you can plug in your own affiliate tag later via DB.shop.affiliateTag.        */
+DB.shop = {
+  region: "com",        // change to co.uk / de / ca / etc. for your market
+  affiliateTag: "",     // e.g. "yourtag-20" — appended as &tag= if set
+  note: "These are live Amazon search links (not affiliate). Set DB.shop.region for your country, or fill in DB.shop.affiliateTag to monetise.",
+  categories: [
+    {
+      name: "Filament",
+      emoji: "🧵",
+      items: [
+        { name: "PLA filament (1.75 mm)",        query: "pla filament 1.75mm" },
+        { name: "PLA+ / tough PLA",              query: "pla plus filament 1.75mm" },
+        { name: "Silk PLA (shiny finish)",       query: "silk pla filament 1.75mm" },
+        { name: "PETG filament",                 query: "petg filament 1.75mm" },
+        { name: "TPU 95A (flexible)",            query: "tpu filament 95a 1.75mm" },
+        { name: "ABS filament",                  query: "abs filament 1.75mm" },
+        { name: "ASA (UV-stable, outdoor)",      query: "asa filament 1.75mm" },
+        { name: "Carbon-fibre PETG/PLA",         query: "carbon fiber pla filament 1.75mm" },
+        { name: "Wood-fill PLA",                 query: "wood filament 1.75mm pla" }
+      ]
+    },
+    {
+      name: "Nozzles & hotend parts",
+      emoji: "🔥",
+      items: [
+        { name: "Brass 0.4 mm nozzles (assorted)", query: "0.4mm brass nozzle mk8 assortment" },
+        { name: "Hardened steel nozzles (CF/GF)",  query: "hardened steel nozzle 0.4mm" },
+        { name: "Capricorn PTFE tube (Bowden)",    query: "capricorn ptfe bowden tube 1.75mm" },
+        { name: "Silicone hotend sock",            query: "silicone hotend sock v6 mk8" },
+        { name: "Nozzle cleaning needles",         query: "0.4mm nozzle cleaning needles" }
+      ]
+    },
+    {
+      name: "Build plates & adhesion",
+      emoji: "🧲",
+      items: [
+        { name: "PEI textured spring-steel sheet", query: "pei textured spring steel build plate" },
+        { name: "Smooth PEI sheet",                query: "smooth pei spring steel build plate" },
+        { name: "Glue stick (Elmer's purple)",     query: "elmer's purple glue stick" },
+        { name: "Magigoo / 3DLAC adhesive",        query: "magigoo 3d printing adhesive" },
+        { name: "Hairspray (Aqua Net)",            query: "aqua net hairspray 3d printing" }
+      ]
+    },
+    {
+      name: "Tools — daily essentials",
+      emoji: "🧰",
+      items: [
+        { name: "Digital calipers (6\")",          query: "digital calipers 150mm stainless" },
+        { name: "Metric hex / Allen key set",      query: "metric hex key set ball end" },
+        { name: "Print removal scraper / spatula", query: "3d print removal scraper spatula" },
+        { name: "Deburring tool",                  query: "deburring tool with blades" },
+        { name: "Precision tweezers (anti-static)",query: "anti static precision tweezers set" },
+        { name: "Flush cutters",                   query: "flush cutters wire side cutter" }
+      ]
+    },
+    {
+      name: "Joining & finishing",
+      emoji: "🔩",
+      items: [
+        { name: "M3 / M4 heat-set inserts",        query: "m3 m4 heat set inserts brass" },
+        { name: "Insert installation tip (iron)",  query: "soldering iron heat set insert tip" },
+        { name: "Cyanoacrylate (super glue + accelerator)", query: "starbond cyanoacrylate super glue accelerator" },
+        { name: "5-minute epoxy",                  query: "5 minute epoxy 2 part" },
+        { name: "Acetone (ABS welding / smoothing)", query: "100% pure acetone gallon" },
+        { name: "Sandpaper assortment (120–2000)", query: "wet dry sandpaper assortment 120 2000" },
+        { name: "Filler primer (rattle can)",      query: "rust-oleum filler primer" }
+      ]
+    },
+    {
+      name: "Filament care & storage",
+      emoji: "🌡️",
+      items: [
+        { name: "Filament dryer (Sunlu / Eibos)",  query: "sunlu filament dryer s2" },
+        { name: "Vacuum bags + pump",              query: "filament vacuum storage bags" },
+        { name: "Rechargeable silica gel",         query: "rechargeable silica gel desiccant" },
+        { name: "Hygrometer",                      query: "mini digital hygrometer" }
+      ]
+    },
+    {
+      name: "Safety",
+      emoji: "🦺",
+      items: [
+        { name: "N95 / N99 mask (sanding & resin)", query: "n95 respirator mask" },
+        { name: "Nitrile gloves (resin)",           query: "nitrile gloves 7mil" },
+        { name: "Isopropyl alcohol 99%",            query: "isopropyl alcohol 99 percent" },
+        { name: "Smoke / fire alarm for shop",      query: "smoke detector wifi 10 year battery" }
+      ]
+    },
+    {
+      name: "Printers — entry recommendations",
+      emoji: "🖨️",
+      items: [
+        { name: "Bambu A1 mini",                   query: "bambu lab a1 mini 3d printer" },
+        { name: "Bambu A1",                        query: "bambu lab a1 3d printer" },
+        { name: "Creality Ender 3 V3",             query: "creality ender 3 v3" },
+        { name: "Anycubic Kobra 2 / 3",            query: "anycubic kobra 2" },
+        { name: "Sovol SV06 / SV08",               query: "sovol sv06" }
+      ]
+    }
+  ]
+};
+
