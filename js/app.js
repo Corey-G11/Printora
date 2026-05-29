@@ -201,8 +201,315 @@
     return arr[day % arr.length];
   }
 
-  // Pixel-art SVG of the pet — a printer spool creature.
-  // Different moods swap eye/mouth.
+  /* ----- 3D pet via three.js -----
+     A spool-creature built from primitive geometries.
+     Mood drives body color, eye shape, and animation. */
+  let _petScene = null;
+
+  function disposePetScene() {
+    if (!_petScene) return;
+    const s = _petScene;
+    _petScene = null;
+    if (s.raf) cancelAnimationFrame(s.raf);
+    if (s.resize) window.removeEventListener("resize", s.resize);
+    if (s.scene) {
+      s.scene.traverse((o) => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) {
+          const mats = Array.isArray(o.material) ? o.material : [o.material];
+          mats.forEach((m) => m.dispose && m.dispose());
+        }
+      });
+    }
+    if (s.renderer) {
+      try { s.renderer.forceContextLoss(); } catch (e) {}
+      s.renderer.dispose();
+      if (s.renderer.domElement && s.renderer.domElement.parentNode) {
+        s.renderer.domElement.parentNode.removeChild(s.renderer.domElement);
+      }
+    }
+  }
+
+  function moodColors(mood) {
+    // [body, accent, eye]
+    const map = {
+      egg:    ["#f5e6c8", "#d9b878", "#1a2a06"],
+      ok:     ["#ff8a2b", "#b9501a", "#1a2a06"],
+      happy:  ["#ff5d8f", "#a3274e", "#1a2a06"],
+      fire:   ["#ff3b1f", "#8a1a08", "#fff3a0"],
+      master: ["#ffd24a", "#8a6010", "#1a2a06"],
+      sleep:  ["#7aa3d9", "#2a4870", "#1a2a06"]
+    };
+    return map[mood] || map.ok;
+  }
+
+  function buildPetMesh(mood) {
+    const T = window.THREE;
+    const group = new T.Group();
+    const [bodyHex, accentHex, eyeHex] = moodColors(mood);
+    const bodyMat = new T.MeshStandardMaterial({
+      color: new T.Color(bodyHex), roughness: 0.45, metalness: 0.05
+    });
+    const accentMat = new T.MeshStandardMaterial({
+      color: new T.Color(accentHex), roughness: 0.55, metalness: 0.05
+    });
+    const eyeMat = new T.MeshStandardMaterial({
+      color: new T.Color(eyeHex), roughness: 0.2, metalness: 0.1
+    });
+    const whiteMat = new T.MeshStandardMaterial({
+      color: 0xffffff, roughness: 0.3
+    });
+
+    if (mood === "egg") {
+      // pure egg shape — squashed sphere
+      const egg = new T.Mesh(new T.SphereGeometry(1, 32, 24), bodyMat);
+      egg.scale.set(0.85, 1.15, 0.85);
+      group.add(egg);
+      // crack
+      const crackMat = new T.MeshStandardMaterial({ color: 0x6b4a0a });
+      [[-0.1, 0.2], [0.05, 0.05], [0.15, -0.1]].forEach(([x, y]) => {
+        const c = new T.Mesh(new T.BoxGeometry(0.18, 0.06, 0.02), crackMat);
+        c.position.set(x, y, 0.85);
+        c.rotation.z = Math.random() * 0.6 - 0.3;
+        group.add(c);
+      });
+      return group;
+    }
+
+    // SPOOL CREATURE BODY — middle cylinder with thicker top/bottom flanges
+    const flangeGeom = new T.CylinderGeometry(1.0, 1.0, 0.22, 32);
+    const topFlange = new T.Mesh(flangeGeom, accentMat);
+    topFlange.position.y = 0.7;
+    const botFlange = new T.Mesh(flangeGeom, accentMat);
+    botFlange.position.y = -0.7;
+    group.add(topFlange, botFlange);
+
+    // middle "wound filament" body
+    const bodyGeom = new T.CylinderGeometry(0.78, 0.78, 1.3, 32);
+    const body = new T.Mesh(bodyGeom, bodyMat);
+    group.add(body);
+
+    // subtle horizontal grooves on the body to look like wound filament
+    for (let i = -0.45; i <= 0.45; i += 0.18) {
+      const groove = new T.Mesh(
+        new T.TorusGeometry(0.79, 0.025, 8, 48),
+        accentMat
+      );
+      groove.rotation.x = Math.PI / 2;
+      groove.position.y = i;
+      group.add(groove);
+    }
+
+    // EYES — two white spheres with dark pupils
+    const eyeRadius = (mood === "fire" || mood === "master") ? 0.18 : 0.16;
+    [-1, 1].forEach((side) => {
+      if (mood === "sleep") {
+        // closed eye — thin curved line
+        const lid = new T.Mesh(
+          new T.TorusGeometry(0.12, 0.025, 8, 16, Math.PI),
+          eyeMat
+        );
+        lid.position.set(side * 0.28, 0.05, 0.74);
+        lid.rotation.z = Math.PI;
+        group.add(lid);
+      } else {
+        const white = new T.Mesh(new T.SphereGeometry(eyeRadius, 16, 16), whiteMat);
+        white.position.set(side * 0.28, 0.1, 0.7);
+        white.scale.z = 0.5;
+        group.add(white);
+        const pupil = new T.Mesh(new T.SphereGeometry(eyeRadius * 0.55, 12, 12), eyeMat);
+        pupil.position.set(side * 0.28, 0.1, 0.78);
+        pupil.scale.z = 0.3;
+        group.add(pupil);
+        // shine
+        const shine = new T.Mesh(new T.SphereGeometry(eyeRadius * 0.25, 8, 8), whiteMat);
+        shine.position.set(side * 0.28 + 0.04, 0.14, 0.82);
+        shine.scale.z = 0.3;
+        group.add(shine);
+      }
+    });
+
+    // MOUTH
+    if (mood === "happy" || mood === "fire" || mood === "master") {
+      // open smile — half torus
+      const smile = new T.Mesh(
+        new T.TorusGeometry(0.18, 0.04, 8, 18, Math.PI),
+        eyeMat
+      );
+      smile.position.set(0, -0.2, 0.72);
+      smile.rotation.z = Math.PI;
+      group.add(smile);
+      // tongue/inside for "wow" mood
+      if (mood === "fire") {
+        const tongue = new T.Mesh(
+          new T.SphereGeometry(0.08, 12, 12),
+          new T.MeshStandardMaterial({ color: 0xff6b8a })
+        );
+        tongue.position.set(0, -0.26, 0.78);
+        tongue.scale.set(1, 0.5, 0.4);
+        group.add(tongue);
+      }
+    } else if (mood === "sleep") {
+      const z = new T.Mesh(
+        new T.TorusGeometry(0.06, 0.02, 8, 12, Math.PI),
+        eyeMat
+      );
+      z.position.set(0, -0.15, 0.72);
+      group.add(z);
+    } else {
+      // neutral mouth — small box
+      const mouth = new T.Mesh(
+        new T.BoxGeometry(0.18, 0.04, 0.04),
+        eyeMat
+      );
+      mouth.position.set(0, -0.18, 0.74);
+      group.add(mouth);
+    }
+
+    // CHEEKS for happy moods
+    if (mood === "happy" || mood === "fire" || mood === "master") {
+      const cheekMat = new T.MeshStandardMaterial({
+        color: 0xff6b8a, transparent: true, opacity: 0.55
+      });
+      [-1, 1].forEach((side) => {
+        const c = new T.Mesh(new T.SphereGeometry(0.1, 12, 12), cheekMat);
+        c.position.set(side * 0.5, -0.08, 0.55);
+        c.scale.z = 0.3;
+        group.add(c);
+      });
+    }
+
+    // CROWN for master mood
+    if (mood === "master") {
+      const crownMat = new T.MeshStandardMaterial({
+        color: 0xffd700, roughness: 0.2, metalness: 0.8
+      });
+      const base = new T.Mesh(new T.CylinderGeometry(0.55, 0.55, 0.12, 16), crownMat);
+      base.position.y = 0.92;
+      group.add(base);
+      for (let i = 0; i < 5; i++) {
+        const spike = new T.Mesh(new T.ConeGeometry(0.08, 0.22, 8), crownMat);
+        const a = (i / 5) * Math.PI * 2;
+        spike.position.set(Math.cos(a) * 0.45, 1.08, Math.sin(a) * 0.45);
+        group.add(spike);
+        const gem = new T.Mesh(
+          new T.SphereGeometry(0.05, 8, 8),
+          new T.MeshStandardMaterial({ color: 0xff3b6b, metalness: 0.6, roughness: 0.1 })
+        );
+        gem.position.set(Math.cos(a) * 0.45, 1.18, Math.sin(a) * 0.45);
+        group.add(gem);
+      }
+    }
+
+    // FLAMES for fire mood
+    if (mood === "fire") {
+      const flameMat = new T.MeshStandardMaterial({
+        color: 0xffa040, emissive: 0xff5500, emissiveIntensity: 0.6,
+        transparent: true, opacity: 0.85
+      });
+      for (let i = 0; i < 5; i++) {
+        const f = new T.Mesh(new T.ConeGeometry(0.12, 0.4, 8), flameMat);
+        const a = (i / 5) * Math.PI * 2;
+        f.position.set(Math.cos(a) * 0.35, 1.0, Math.sin(a) * 0.35);
+        f.userData.flame = true;
+        f.userData.offset = i * 0.4;
+        group.add(f);
+      }
+    }
+
+    // little feet
+    const footMat = accentMat;
+    [-1, 1].forEach((side) => {
+      const foot = new T.Mesh(
+        new T.BoxGeometry(0.28, 0.12, 0.4),
+        footMat
+      );
+      foot.position.set(side * 0.4, -0.95, 0.1);
+      group.add(foot);
+    });
+
+    return group;
+  }
+
+  function initPetScene(host, mood) {
+    const T = window.THREE;
+    if (!T) return null;
+    const w = host.clientWidth || 120;
+    const h = host.clientHeight || 120;
+
+    const scene = new T.Scene();
+    scene.background = null;
+
+    const camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+    camera.position.set(0, 0.4, 5.2);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    renderer.outputColorSpace = T.SRGBColorSpace || T.LinearSRGBColorSpace;
+    host.innerHTML = "";
+    host.appendChild(renderer.domElement);
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
+    renderer.domElement.style.display = "block";
+
+    // lights
+    const ambient = new T.AmbientLight(0xffffff, 0.55);
+    scene.add(ambient);
+    const key = new T.DirectionalLight(0xffffff, 1.1);
+    key.position.set(2, 3, 4);
+    scene.add(key);
+    const rim = new T.DirectionalLight(0xa0e0ff, 0.45);
+    rim.position.set(-3, 1, -2);
+    scene.add(rim);
+
+    const pet = buildPetMesh(mood);
+    scene.add(pet);
+
+    const state = { scene, camera, renderer, pet, mood, t0: performance.now() };
+
+    function loop() {
+      const t = (performance.now() - state.t0) / 1000;
+      // gentle rotation
+      pet.rotation.y = Math.sin(t * 0.6) * 0.4;
+      // mood-specific motion
+      if (mood === "sleep") {
+        pet.position.y = Math.sin(t * 0.8) * 0.04 - 0.05;
+        pet.scale.setScalar(1 + Math.sin(t * 0.8) * 0.02);
+      } else if (mood === "fire" || mood === "master") {
+        pet.position.y = Math.abs(Math.sin(t * 3.5)) * 0.18;
+        pet.rotation.z = Math.sin(t * 5) * 0.06;
+      } else if (mood === "happy") {
+        pet.position.y = Math.abs(Math.sin(t * 2.4)) * 0.12;
+      } else {
+        pet.position.y = Math.sin(t * 1.4) * 0.06;
+      }
+      // animate fire flames flickering
+      pet.children.forEach((c) => {
+        if (c.userData && c.userData.flame) {
+          c.scale.y = 1 + Math.sin(t * 8 + c.userData.offset) * 0.25;
+          c.rotation.y = t * 1.5 + c.userData.offset;
+        }
+      });
+      renderer.render(scene, camera);
+      state.raf = requestAnimationFrame(loop);
+    }
+    state.raf = requestAnimationFrame(loop);
+
+    state.resize = () => {
+      const w2 = host.clientWidth || 120;
+      const h2 = host.clientHeight || 120;
+      renderer.setSize(w2, h2, false);
+      camera.aspect = w2 / h2;
+      camera.updateProjectionMatrix();
+    };
+    window.addEventListener("resize", state.resize);
+
+    return state;
+  }
+
+  // Pixel-art SVG fallback (no WebGL / no three.js)
   function petSvg(mood) {
     // 16x16 grid scaled up. We draw with rect "pixels".
     // Body color shifts slightly by mood.
@@ -306,14 +613,15 @@
     const zz = (mood === "sleep")
       ? `<span class="pet-zz">Z</span><span class="pet-zz">Z</span>`
       : "";
+    // dispose any previous 3D scene before re-rendering
+    disposePetScene();
     host.innerHTML = `
       <div class="pet-stage">
         <div class="pet-name">${esc(petName())}</div>
         <div class="pet-mood">${esc(moodLabel)}</div>
         <div class="pet-speech">${esc(petLines(mood))}</div>
-        <div class="pet ${moodClass}">
+        <div class="pet ${moodClass}" id="pet3d">
           ${zz}
-          ${petSvg(mood)}
         </div>
         <div class="pet-stats">
           <span class="pet-stat"><span class="ps-ico">⭐</span>Lv ${lvl}</span>
@@ -343,6 +651,36 @@
         go(dest);
       });
     });
+
+    // mount 3D pet (falls back to flat SVG if WebGL/three.js unavailable)
+    const pet3d = host.querySelector("#pet3d");
+    if (pet3d && window.THREE && hasWebGL()) {
+      pet3d.classList.add("pet-3d");
+      // ensure layout has a size before initing the renderer
+      requestAnimationFrame(() => {
+        try {
+          _petScene = initPetScene(pet3d, mood);
+          if (!_petScene) throw new Error("scene init failed");
+        } catch (e) {
+          pet3d.classList.remove("pet-3d");
+          pet3d.innerHTML = petSvg(mood);
+        }
+      });
+    } else if (pet3d) {
+      pet3d.classList.remove("pet-3d");
+      pet3d.innerHTML = petSvg(mood);
+    }
+  }
+
+  let _webglCache = null;
+  function hasWebGL() {
+    if (_webglCache !== null) return _webglCache;
+    try {
+      const c = document.createElement("canvas");
+      const gl = c.getContext("webgl2") || c.getContext("webgl") || c.getContext("experimental-webgl");
+      _webglCache = !!(gl && typeof gl.getParameter === "function");
+    } catch (e) { _webglCache = false; }
+    return _webglCache;
   }
   function renderProgressInto(card) {
     const lvl = level(), inLvl = xpInLevel();

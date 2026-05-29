@@ -256,7 +256,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   border-radius: 999px;
 }
 
-/* the pixel creature itself */
+/* the creature — flat SVG fallback */
 .pet {
   position: relative;
   width: 96px; height: 96px;
@@ -279,6 +279,21 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 @keyframes pet-celebrate {
   0%, 100% { transform: translateY(0) rotate(-3deg); }
   50%      { transform: translateY(-10px) rotate(3deg); }
+}
+
+/* when the 3D canvas is mounted, kill the SVG-only bob — three.js drives motion */
+.pet.pet-3d {
+  width: 180px; height: 180px;
+  image-rendering: auto;
+  animation: none;
+  filter: drop-shadow(0 8px 4px rgba(26, 42, 6, .25));
+  background: radial-gradient(circle at 50% 90%, rgba(26, 42, 6, .25) 0%, transparent 55%);
+  overflow: visible;
+}
+.pet.pet-3d canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 /* "Z" sleep particles */
