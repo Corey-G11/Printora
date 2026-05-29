@@ -95,6 +95,42 @@
   }
   let PROGRESS = loadProgress();
 
+  /* ----- theme (light = Game Boy slate, dark = charcoal LCD) ----- */
+  const THEME_KEY = "printora-theme";
+  function loadTheme() {
+    try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+  }
+  function applyTheme(t) {
+    if (t === "light" || t === "dark") {
+      document.documentElement.dataset.theme = t;
+    } else {
+      delete document.documentElement.dataset.theme; // follow system
+    }
+    refreshThemeBtn();
+  }
+  function currentTheme() {
+    const saved = document.documentElement.dataset.theme;
+    if (saved) return saved;
+    return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  }
+  function toggleTheme() {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    applyTheme(next);
+    // re-render the 3D pet so its colors match the new theme
+    const card = document.getElementById("petScreen");
+    if (card) renderPetInto(card);
+  }
+  function refreshThemeBtn() {
+    const btn = document.getElementById("themeBtn");
+    if (btn) {
+      const dark = currentTheme() === "dark";
+      btn.textContent = dark ? "☾" : "☀";
+      btn.setAttribute("title", dark ? "Switch to light" : "Switch to dark");
+    }
+  }
+  applyTheme(loadTheme());
+
   function todayStr() { return new Date().toISOString().slice(0, 10); }
   function updateStreak() {
     const today = todayStr();
@@ -231,14 +267,27 @@
   }
 
   function moodColors(mood) {
-    // [body, accent, eye]
-    const map = {
-      egg:    ["#f5e6c8", "#d9b878", "#1a2a06"],
-      ok:     ["#ff8a2b", "#b9501a", "#1a2a06"],
-      happy:  ["#ff5d8f", "#a3274e", "#1a2a06"],
-      fire:   ["#ff3b1f", "#8a1a08", "#fff3a0"],
-      master: ["#ffd24a", "#8a6010", "#1a2a06"],
-      sleep:  ["#7aa3d9", "#2a4870", "#1a2a06"]
+    // [body, accent, eye] — eye color matches LCD pixel ink (theme aware)
+    const isDark = (document.documentElement.dataset.theme === "dark") ||
+      (!document.documentElement.dataset.theme &&
+       window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const eye = isDark ? "#d6e8d8" : "#2a3340";
+    // body colors stay vivid (pet sits on dim LCD bg so it pops either way),
+    // but we soften them slightly in light mode to harmonize with the slate shell
+    const map = isDark ? {
+      egg:    ["#e8d4a8", "#a88a54", eye],
+      ok:     ["#ffb05c", "#a06028", eye],
+      happy:  ["#e89bb0", "#a04a64", eye],
+      fire:   ["#ff5a3a", "#9a2010", "#fff3a0"],
+      master: ["#ffd28a", "#8a6018", eye],
+      sleep:  ["#7bd0c0", "#2a4870", eye]
+    } : {
+      egg:    ["#e8d4a8", "#a88a54", eye],
+      ok:     ["#d97a5b", "#8a3a20", eye],
+      happy:  ["#c97a8f", "#7a3a48", eye],
+      fire:   ["#c84a30", "#6a1a08", "#fff3a0"],
+      master: ["#c69050", "#6a4010", eye],
+      sleep:  ["#5b9aa8", "#2a4870", eye]
     };
     return map[mood] || map.ok;
   }
@@ -1263,6 +1312,9 @@
   if (pillEl) pillEl.addEventListener("click", () => go("achievements"));
   const shareEl = document.getElementById("shareBtn");
   if (shareEl) shareEl.addEventListener("click", shareApp);
+  const themeEl = document.getElementById("themeBtn");
+  if (themeEl) themeEl.addEventListener("click", toggleTheme);
+  refreshThemeBtn();
   go((location.hash || "#home").slice(1));
   // welcome achievement fires on first ever launch
   checkAchievements();
