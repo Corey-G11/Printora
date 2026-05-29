@@ -1,10 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Filament spool">
-  <rect width="512" height="512" rx="96" fill="#0F1420"/>
-  <circle cx="256" cy="256" r="184" fill="#FFA854"/>
-  <circle cx="256" cy="256" r="166" fill="#FF7A1A"/>
-  <circle cx="256" cy="256" r="90" fill="#FFA854"/>
-  <circle cx="256" cy="256" r="69" fill="#1C2436"/>
-  <circle cx="256" cy="131" r="27" fill="#1C2436"/>
-  <circle cx="364" cy="318" r="27" fill="#1C2436"/>
-  <circle cx="148" cy="318" r="27" fill="#1C2436"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="3D printer">
+  <!-- background -->
+  <rect width="512" height="512" rx="96" fill="#2a3340"/>
+
+  <!-- shadow under printer -->
+  <ellipse cx="256" cy="448" rx="190" ry="14" fill="#000" opacity=".22"/>
+
+  <!-- base / heated bed plate -->
+  <rect x="84" y="372" width="344" height="42" rx="6" fill="#5b6c8f"/>
+  <rect x="84" y="372" width="344" height="10" rx="3" fill="#8a96b8"/>
+
+  <!-- print bed (glass) — slight green tint -->
+  <rect x="130" y="346" width="252" height="22" rx="3" fill="#cfe0c0"/>
+  <rect x="130" y="346" width="252" height="5" rx="2" fill="#e0eed4"/>
+  <!-- bed grid -->
+  <g stroke="#9bb89a" stroke-width="1.5" opacity=".8">
+    <line x1="170" y1="346" x2="170" y2="368"/>
+    <line x1="210" y1="346" x2="210" y2="368"/>
+    <line x1="250" y1="346" x2="250" y2="368"/>
+    <line x1="290" y1="346" x2="290" y2="368"/>
+    <line x1="330" y1="346" x2="330" y2="368"/>
+  </g>
+
+  <!-- frame uprights -->
+  <rect x="108" y="120" width="32" height="232" rx="4" fill="#d97a5b"/>
+  <rect x="372" y="120" width="32" height="232" rx="4" fill="#d97a5b"/>
+  <!-- highlights -->
+  <rect x="112" y="124" width="6" height="222" fill="#e89b7a" opacity=".6"/>
+  <rect x="376" y="124" width="6" height="222" fill="#e89b7a" opacity=".6"/>
+
+  <!-- top crossbar -->
+  <rect x="84" y="98" width="344" height="32" rx="4" fill="#d97a5b"/>
+  <rect x="88" y="102" width="336" height="6" fill="#e89b7a" opacity=".6"/>
+
+  <!-- spool mount -->
+  <rect x="240" y="60" width="32" height="48" fill="#5b6c8f"/>
+  <!-- spool -->
+  <circle cx="256" cy="60" r="42" fill="#e89b7a"/>
+  <circle cx="256" cy="60" r="34" fill="#d97a5b"/>
+  <circle cx="256" cy="60" r="12" fill="#2a3340"/>
+  <!-- spool side accent -->
+  <circle cx="256" cy="60" r="42" fill="none" stroke="#2a3340" stroke-width="3"/>
+
+  <!-- filament strand from spool to printhead -->
+  <path d="M256 102 C 256 160, 256 190, 256 220" stroke="#d97a5b" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+  <!-- X-axis gantry (the horizontal rod) -->
+  <rect x="108" y="216" width="296" height="14" rx="3" fill="#3a4252"/>
+  <rect x="108" y="216" width="296" height="4" rx="2" fill="#5b6c8f"/>
+
+  <!-- print head (carriage) — the cute face -->
+  <rect x="208" y="222" width="96" height="78" rx="10" fill="#d97a5b"/>
+  <rect x="208" y="222" width="96" height="8" rx="6" fill="#e89b7a"/>
+  <!-- eyes -->
+  <rect x="226" y="246" width="18" height="20" rx="3" fill="#2a3340"/>
+  <rect x="268" y="246" width="18" height="20" rx="3" fill="#2a3340"/>
+  <rect x="230" y="248" width="6" height="6" fill="#fff" opacity=".95"/>
+  <rect x="272" y="248" width="6" height="6" fill="#fff" opacity=".95"/>
+  <!-- smile -->
+  <path d="M236 278 Q 256 292 276 278" stroke="#2a3340" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- nozzle -->
+  <polygon points="244,300 268,300 256,326" fill="#3a4252"/>
+  <rect x="248" y="300" width="16" height="6" fill="#5b6c8f"/>
+  <!-- tiny molten extrusion -->
+  <rect x="254" y="326" width="4" height="14" fill="#e89b7a"/>
 </svg>
