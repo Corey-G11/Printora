@@ -1,12 +1,13 @@
 /* Printora service worker — network-first so updates appear as soon as you're online,
    with a cached fallback that keeps the app working fully offline. */
-const CACHE = "printora-v9";
+const CACHE = "printora-v11";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/styles.css",
   "./js/data.js",
   "./js/app.js",
+  "./js/vendor/three.min.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
   "./icons/icon-192.png",
