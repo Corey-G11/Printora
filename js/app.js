@@ -238,8 +238,8 @@
   }
 
   /* ----- 3D pet via three.js -----
-     A spool-creature built from primitive geometries.
-     Mood drives body color, eye shape, and animation. */
+     A bed-slinger 3D printer character. The print head is the face.
+     Mood drives color, lights, animation speed, and extras (crown/flames). */
   let _petScene = null;
 
   function disposePetScene() {
@@ -294,190 +294,273 @@
 
   function buildPetMesh(mood) {
     const T = window.THREE;
-    const group = new T.Group();
-    const [bodyHex, accentHex, eyeHex] = moodColors(mood);
-    const bodyMat = new T.MeshStandardMaterial({
-      color: new T.Color(bodyHex), roughness: 0.45, metalness: 0.05
+    const root = new T.Group();
+    const [frameHex, accentHex, eyeHex] = moodColors(mood);
+    const frameMat = new T.MeshStandardMaterial({
+      color: new T.Color(frameHex), roughness: 0.45, metalness: 0.15
+    });
+    const railMat = new T.MeshStandardMaterial({
+      color: 0x2a3340, roughness: 0.3, metalness: 0.65
     });
     const accentMat = new T.MeshStandardMaterial({
-      color: new T.Color(accentHex), roughness: 0.55, metalness: 0.05
+      color: new T.Color(accentHex), roughness: 0.55, metalness: 0.1
     });
     const eyeMat = new T.MeshStandardMaterial({
       color: new T.Color(eyeHex), roughness: 0.2, metalness: 0.1
     });
-    const whiteMat = new T.MeshStandardMaterial({
-      color: 0xffffff, roughness: 0.3
+    const whiteMat = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+    const bedMat = new T.MeshStandardMaterial({
+      color: 0xcfe0c0, roughness: 0.4, metalness: 0.0
     });
 
     if (mood === "egg") {
-      // pure egg shape — squashed sphere
-      const egg = new T.Mesh(new T.SphereGeometry(1, 32, 24), bodyMat);
-      egg.scale.set(0.85, 1.15, 0.85);
-      group.add(egg);
-      // crack
+      // egg sitting on a bed plate
+      const baseGeom = new T.BoxGeometry(2.2, 0.18, 1.2);
+      const base = new T.Mesh(baseGeom, frameMat);
+      base.position.y = -0.95;
+      root.add(base);
+      const bed = new T.Mesh(new T.BoxGeometry(1.6, 0.08, 0.9), bedMat);
+      bed.position.y = -0.82;
+      root.add(bed);
+      const egg = new T.Mesh(new T.SphereGeometry(0.55, 32, 24), accentMat);
+      egg.scale.set(0.85, 1.2, 0.85);
+      egg.position.y = -0.1;
+      root.add(egg);
       const crackMat = new T.MeshStandardMaterial({ color: 0x6b4a0a });
       [[-0.1, 0.2], [0.05, 0.05], [0.15, -0.1]].forEach(([x, y]) => {
-        const c = new T.Mesh(new T.BoxGeometry(0.18, 0.06, 0.02), crackMat);
-        c.position.set(x, y, 0.85);
+        const c = new T.Mesh(new T.BoxGeometry(0.14, 0.05, 0.02), crackMat);
+        c.position.set(x, y, 0.45);
         c.rotation.z = Math.random() * 0.6 - 0.3;
-        group.add(c);
+        root.add(c);
       });
-      return group;
+      return root;
     }
 
-    // SPOOL CREATURE BODY — middle cylinder with thicker top/bottom flanges
-    const flangeGeom = new T.CylinderGeometry(1.0, 1.0, 0.22, 32);
-    const topFlange = new T.Mesh(flangeGeom, accentMat);
-    topFlange.position.y = 0.7;
-    const botFlange = new T.Mesh(flangeGeom, accentMat);
-    botFlange.position.y = -0.7;
-    group.add(topFlange, botFlange);
+    /* ----- BED-SLINGER 3D PRINTER ----- */
 
-    // middle "wound filament" body
-    const bodyGeom = new T.CylinderGeometry(0.78, 0.78, 1.3, 32);
-    const body = new T.Mesh(bodyGeom, bodyMat);
-    group.add(body);
+    // BASE — the bottom electronics box
+    const base = new T.Mesh(new T.BoxGeometry(2.4, 0.32, 1.4), frameMat);
+    base.position.y = -1.05;
+    root.add(base);
+    // base highlight strip (controls panel)
+    const panel = new T.Mesh(new T.BoxGeometry(0.9, 0.18, 0.04), accentMat);
+    panel.position.set(0, -1.0, 0.72);
+    root.add(panel);
+    // tiny LCD light
+    const lcdLight = new T.Mesh(
+      new T.BoxGeometry(0.25, 0.06, 0.02),
+      new T.MeshStandardMaterial({ color: 0xa0d0a0, emissive: 0x4a6e62, emissiveIntensity: 0.6 })
+    );
+    lcdLight.position.set(0, -1.0, 0.74);
+    root.add(lcdLight);
 
-    // subtle horizontal grooves on the body to look like wound filament
-    for (let i = -0.45; i <= 0.45; i += 0.18) {
-      const groove = new T.Mesh(
-        new T.TorusGeometry(0.79, 0.025, 8, 48),
-        accentMat
-      );
-      groove.rotation.x = Math.PI / 2;
-      groove.position.y = i;
-      group.add(groove);
+    // Y-AXIS RAILS (under the bed)
+    [-0.5, 0.5].forEach((x) => {
+      const rail = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 1.4, 12), railMat);
+      rail.rotation.x = Math.PI / 2;
+      rail.position.set(x, -0.85, 0);
+      root.add(rail);
+    });
+
+    // HEATED BED — slides on Y (Z in scene) and is named for the loop
+    const bedGroup = new T.Group();
+    const bedPlate = new T.Mesh(new T.BoxGeometry(1.7, 0.08, 1.0), frameMat);
+    bedPlate.position.y = -0.78;
+    bedGroup.add(bedPlate);
+    const bedSurface = new T.Mesh(new T.BoxGeometry(1.55, 0.04, 0.88), bedMat);
+    bedSurface.position.y = -0.72;
+    bedGroup.add(bedSurface);
+    // grid lines on bed
+    const gridMat = new T.MeshStandardMaterial({ color: 0x9bb89a });
+    for (let i = -0.6; i <= 0.6; i += 0.3) {
+      const ln = new T.Mesh(new T.BoxGeometry(0.01, 0.005, 0.85), gridMat);
+      ln.position.set(i, -0.69, 0);
+      bedGroup.add(ln);
     }
+    bedGroup.userData.role = "bed";
+    root.add(bedGroup);
 
-    // EYES — two white spheres with dark pupils
-    const eyeRadius = (mood === "fire" || mood === "master") ? 0.18 : 0.16;
+    // FRAME UPRIGHTS
+    [-1, 1].forEach((side) => {
+      const up = new T.Mesh(new T.BoxGeometry(0.18, 2.2, 0.18), frameMat);
+      up.position.set(side * 1.05, 0.05, -0.3);
+      root.add(up);
+    });
+    // TOP CROSSBAR
+    const cross = new T.Mesh(new T.BoxGeometry(2.4, 0.18, 0.18), frameMat);
+    cross.position.set(0, 1.15, -0.3);
+    root.add(cross);
+
+    // X-AXIS RAIL (horizontal bar that holds the print head)
+    const xrail = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 2.1, 12), railMat);
+    xrail.rotation.z = Math.PI / 2;
+    xrail.position.set(0, 0.4, -0.15);
+    xrail.userData.role = "xrail";
+    root.add(xrail);
+    // Z-axis lead screws
+    [-1, 1].forEach((side) => {
+      const lead = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 2.0, 12), railMat);
+      lead.position.set(side * 0.9, 0.05, -0.3);
+      lead.userData.role = "lead";
+      root.add(lead);
+    });
+
+    // PRINT HEAD (the face)
+    const headGroup = new T.Group();
+    headGroup.userData.role = "head";
+    const head = new T.Mesh(new T.BoxGeometry(0.7, 0.55, 0.4), accentMat);
+    head.position.set(0, 0, 0);
+    headGroup.add(head);
+    // hotend
+    const hotend = new T.Mesh(new T.CylinderGeometry(0.08, 0.04, 0.18, 12), railMat);
+    hotend.position.set(0, -0.36, 0.05);
+    headGroup.add(hotend);
+    // nozzle tip
+    const nozzle = new T.Mesh(new T.ConeGeometry(0.04, 0.08, 8), railMat);
+    nozzle.position.set(0, -0.48, 0.05);
+    headGroup.add(nozzle);
+    // small fan on the side
+    const fanMat = new T.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 });
+    const fan = new T.Mesh(new T.BoxGeometry(0.08, 0.28, 0.28), fanMat);
+    fan.position.set(0.32, -0.05, 0);
+    headGroup.add(fan);
+
+    // EYES on the print head
+    const eyeR = (mood === "fire" || mood === "master") ? 0.09 : 0.075;
     [-1, 1].forEach((side) => {
       if (mood === "sleep") {
-        // closed eye — thin curved line
         const lid = new T.Mesh(
-          new T.TorusGeometry(0.12, 0.025, 8, 16, Math.PI),
+          new T.TorusGeometry(0.07, 0.018, 6, 12, Math.PI),
           eyeMat
         );
-        lid.position.set(side * 0.28, 0.05, 0.74);
+        lid.position.set(side * 0.16, 0.02, 0.21);
         lid.rotation.z = Math.PI;
-        group.add(lid);
+        headGroup.add(lid);
       } else {
-        const white = new T.Mesh(new T.SphereGeometry(eyeRadius, 16, 16), whiteMat);
-        white.position.set(side * 0.28, 0.1, 0.7);
+        const white = new T.Mesh(new T.SphereGeometry(eyeR, 16, 16), whiteMat);
+        white.position.set(side * 0.16, 0.06, 0.18);
         white.scale.z = 0.5;
-        group.add(white);
-        const pupil = new T.Mesh(new T.SphereGeometry(eyeRadius * 0.55, 12, 12), eyeMat);
-        pupil.position.set(side * 0.28, 0.1, 0.78);
+        headGroup.add(white);
+        const pupil = new T.Mesh(new T.SphereGeometry(eyeR * 0.55, 12, 12), eyeMat);
+        pupil.position.set(side * 0.16, 0.06, 0.22);
         pupil.scale.z = 0.3;
-        group.add(pupil);
-        // shine
-        const shine = new T.Mesh(new T.SphereGeometry(eyeRadius * 0.25, 8, 8), whiteMat);
-        shine.position.set(side * 0.28 + 0.04, 0.14, 0.82);
+        headGroup.add(pupil);
+        const shine = new T.Mesh(new T.SphereGeometry(eyeR * 0.28, 8, 8), whiteMat);
+        shine.position.set(side * 0.16 + 0.02, 0.085, 0.24);
         shine.scale.z = 0.3;
-        group.add(shine);
+        headGroup.add(shine);
       }
     });
 
-    // MOUTH
+    // MOUTH on the print head
     if (mood === "happy" || mood === "fire" || mood === "master") {
-      // open smile — half torus
       const smile = new T.Mesh(
-        new T.TorusGeometry(0.18, 0.04, 8, 18, Math.PI),
+        new T.TorusGeometry(0.09, 0.02, 6, 16, Math.PI),
         eyeMat
       );
-      smile.position.set(0, -0.2, 0.72);
+      smile.position.set(0, -0.12, 0.21);
       smile.rotation.z = Math.PI;
-      group.add(smile);
-      // tongue/inside for "wow" mood
-      if (mood === "fire") {
-        const tongue = new T.Mesh(
-          new T.SphereGeometry(0.08, 12, 12),
-          new T.MeshStandardMaterial({ color: 0xff6b8a })
-        );
-        tongue.position.set(0, -0.26, 0.78);
-        tongue.scale.set(1, 0.5, 0.4);
-        group.add(tongue);
-      }
+      headGroup.add(smile);
     } else if (mood === "sleep") {
       const z = new T.Mesh(
-        new T.TorusGeometry(0.06, 0.02, 8, 12, Math.PI),
+        new T.TorusGeometry(0.03, 0.012, 6, 12, Math.PI),
         eyeMat
       );
-      z.position.set(0, -0.15, 0.72);
-      group.add(z);
+      z.position.set(0, -0.08, 0.21);
+      headGroup.add(z);
     } else {
-      // neutral mouth — small box
-      const mouth = new T.Mesh(
-        new T.BoxGeometry(0.18, 0.04, 0.04),
-        eyeMat
-      );
-      mouth.position.set(0, -0.18, 0.74);
-      group.add(mouth);
+      const mouth = new T.Mesh(new T.BoxGeometry(0.1, 0.02, 0.02), eyeMat);
+      mouth.position.set(0, -0.1, 0.21);
+      headGroup.add(mouth);
     }
 
     // CHEEKS for happy moods
     if (mood === "happy" || mood === "fire" || mood === "master") {
       const cheekMat = new T.MeshStandardMaterial({
-        color: 0xff6b8a, transparent: true, opacity: 0.55
+        color: 0xff7a8a, transparent: true, opacity: 0.55
       });
       [-1, 1].forEach((side) => {
-        const c = new T.Mesh(new T.SphereGeometry(0.1, 12, 12), cheekMat);
-        c.position.set(side * 0.5, -0.08, 0.55);
+        const c = new T.Mesh(new T.SphereGeometry(0.05, 12, 12), cheekMat);
+        c.position.set(side * 0.26, -0.05, 0.19);
         c.scale.z = 0.3;
-        group.add(c);
+        headGroup.add(c);
       });
     }
+    headGroup.position.set(0, 0.4, 0);
+    root.add(headGroup);
 
-    // CROWN for master mood
+    // SPOOL on top of the printer
+    const spoolGroup = new T.Group();
+    spoolGroup.userData.role = "spool";
+    const spoolBody = new T.Mesh(new T.CylinderGeometry(0.32, 0.32, 0.18, 32), accentMat);
+    spoolBody.rotation.z = Math.PI / 2;
+    spoolGroup.add(spoolBody);
+    const spoolHubMat = new T.MeshStandardMaterial({ color: 0x2a3340 });
+    const hub = new T.Mesh(new T.CylinderGeometry(0.08, 0.08, 0.22, 16), spoolHubMat);
+    hub.rotation.z = Math.PI / 2;
+    spoolGroup.add(hub);
+    // flanges
+    [-1, 1].forEach((side) => {
+      const flange = new T.Mesh(new T.CylinderGeometry(0.36, 0.36, 0.02, 32), frameMat);
+      flange.rotation.z = Math.PI / 2;
+      flange.position.x = side * 0.1;
+      spoolGroup.add(flange);
+    });
+    spoolGroup.position.set(0, 1.45, -0.3);
+    root.add(spoolGroup);
+
+    // spool mount post
+    const mount = new T.Mesh(new T.BoxGeometry(0.12, 0.3, 0.12), frameMat);
+    mount.position.set(0, 1.3, -0.3);
+    root.add(mount);
+
+    // FILAMENT STRAND — curve from spool down to the print head
+    const filamentMat = new T.MeshStandardMaterial({ color: new T.Color(accentHex) });
+    const curve = new T.CatmullRomCurve3([
+      new T.Vector3(0,  1.4, -0.15),
+      new T.Vector3(0.1, 1.0, 0.0),
+      new T.Vector3(0.05, 0.7, 0.1),
+      new T.Vector3(0, 0.5, 0.05)
+    ]);
+    const filament = new T.Mesh(
+      new T.TubeGeometry(curve, 24, 0.02, 8, false),
+      filamentMat
+    );
+    root.add(filament);
+
+    // CROWN — master mood (sits on top crossbar)
     if (mood === "master") {
       const crownMat = new T.MeshStandardMaterial({
-        color: 0xffd700, roughness: 0.2, metalness: 0.8
+        color: 0xffd24a, roughness: 0.2, metalness: 0.8
       });
-      const base = new T.Mesh(new T.CylinderGeometry(0.55, 0.55, 0.12, 16), crownMat);
-      base.position.y = 0.92;
-      group.add(base);
+      const cbase = new T.Mesh(new T.CylinderGeometry(0.3, 0.3, 0.1, 16), crownMat);
+      cbase.position.set(0, 1.42, -0.3);
+      root.add(cbase);
       for (let i = 0; i < 5; i++) {
-        const spike = new T.Mesh(new T.ConeGeometry(0.08, 0.22, 8), crownMat);
+        const spike = new T.Mesh(new T.ConeGeometry(0.06, 0.18, 8), crownMat);
         const a = (i / 5) * Math.PI * 2;
-        spike.position.set(Math.cos(a) * 0.45, 1.08, Math.sin(a) * 0.45);
-        group.add(spike);
-        const gem = new T.Mesh(
-          new T.SphereGeometry(0.05, 8, 8),
-          new T.MeshStandardMaterial({ color: 0xff3b6b, metalness: 0.6, roughness: 0.1 })
-        );
-        gem.position.set(Math.cos(a) * 0.45, 1.18, Math.sin(a) * 0.45);
-        group.add(gem);
+        spike.position.set(Math.cos(a) * 0.22, 1.55, -0.3 + Math.sin(a) * 0.22);
+        root.add(spike);
       }
     }
 
-    // FLAMES for fire mood
+    // FLAMES — fire mood (rising off the hotend)
     if (mood === "fire") {
       const flameMat = new T.MeshStandardMaterial({
-        color: 0xffa040, emissive: 0xff5500, emissiveIntensity: 0.6,
+        color: 0xffa040, emissive: 0xff5500, emissiveIntensity: 0.7,
         transparent: true, opacity: 0.85
       });
       for (let i = 0; i < 5; i++) {
-        const f = new T.Mesh(new T.ConeGeometry(0.12, 0.4, 8), flameMat);
+        const f = new T.Mesh(new T.ConeGeometry(0.06, 0.2, 8), flameMat);
         const a = (i / 5) * Math.PI * 2;
-        f.position.set(Math.cos(a) * 0.35, 1.0, Math.sin(a) * 0.35);
+        f.position.set(Math.cos(a) * 0.1, -0.05, 0.05 + Math.sin(a) * 0.1);
         f.userData.flame = true;
         f.userData.offset = i * 0.4;
-        group.add(f);
+        headGroup.add(f);
       }
     }
 
-    // little feet
-    const footMat = accentMat;
-    [-1, 1].forEach((side) => {
-      const foot = new T.Mesh(
-        new T.BoxGeometry(0.28, 0.12, 0.4),
-        footMat
-      );
-      foot.position.set(side * 0.4, -0.95, 0.1);
-      group.add(foot);
-    });
-
-    return group;
+    return root;
   }
 
   function initPetScene(host, mood) {
@@ -490,8 +573,8 @@
     scene.background = null;
 
     const camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
-    camera.position.set(0, 0.4, 5.2);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(0.4, 0.4, 5.4);
+    camera.lookAt(0, 0.15, 0);
 
     const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -516,31 +599,59 @@
     const pet = buildPetMesh(mood);
     scene.add(pet);
 
-    const state = { scene, camera, renderer, pet, mood, t0: performance.now() };
+    // find named sub-parts to animate
+    const parts = { bed: null, head: null, spool: null };
+    pet.traverse((o) => {
+      const r = o.userData && o.userData.role;
+      if (r && parts[r] === null) parts[r] = o;
+    });
+    // flames live under headGroup — collect them once
+    const flames = [];
+    pet.traverse((o) => { if (o.userData && o.userData.flame) flames.push(o); });
+
+    const state = { scene, camera, renderer, pet, mood, parts, flames, t0: performance.now() };
+
+    // speed knob per mood — drives bed slide, head Y, and spool rotation
+    const speed = ({
+      egg: 0, sleep: 0.25, ok: 1, happy: 1.6, fire: 3.0, master: 2.2
+    })[mood] || 1;
 
     function loop() {
       const t = (performance.now() - state.t0) / 1000;
-      // gentle rotation
-      pet.rotation.y = Math.sin(t * 0.6) * 0.4;
-      // mood-specific motion
-      if (mood === "sleep") {
-        pet.position.y = Math.sin(t * 0.8) * 0.04 - 0.05;
-        pet.scale.setScalar(1 + Math.sin(t * 0.8) * 0.02);
-      } else if (mood === "fire" || mood === "master") {
-        pet.position.y = Math.abs(Math.sin(t * 3.5)) * 0.18;
-        pet.rotation.z = Math.sin(t * 5) * 0.06;
-      } else if (mood === "happy") {
-        pet.position.y = Math.abs(Math.sin(t * 2.4)) * 0.12;
-      } else {
-        pet.position.y = Math.sin(t * 1.4) * 0.06;
-      }
-      // animate fire flames flickering
-      pet.children.forEach((c) => {
-        if (c.userData && c.userData.flame) {
-          c.scale.y = 1 + Math.sin(t * 8 + c.userData.offset) * 0.25;
-          c.rotation.y = t * 1.5 + c.userData.offset;
+
+      // gentle sway of the whole printer (subtle — keep it readable)
+      pet.rotation.y = Math.sin(t * 0.4) * 0.18;
+
+      if (mood !== "egg") {
+        // BED slides forward/back along Z
+        if (parts.bed) parts.bed.position.z = Math.sin(t * 1.3 * speed) * 0.35;
+        // PRINT HEAD moves up/down on Y (climbing the Z lead screws)
+        if (parts.head) {
+          const baseY = 0.4;
+          const range = 0.55;
+          parts.head.position.y = baseY + Math.sin(t * 1.7 * speed) * range;
+          parts.head.position.x = Math.cos(t * 2.0 * speed) * 0.45;
         }
+        // X-axis rail follows the head's Y
+        const xrail = pet.children.find((c) => c.userData && c.userData.role === "xrail");
+        if (xrail && parts.head) xrail.position.y = parts.head.position.y;
+        // SPOOL rotates lazily
+        if (parts.spool) parts.spool.rotation.x = t * 0.5 * speed;
+      }
+
+      // sleep: park the head, dim motion
+      if (mood === "sleep" && parts.head) {
+        parts.head.position.x = -0.9;
+        parts.head.position.y = 0.4 + Math.sin(t * 0.5) * 0.02;
+        if (parts.bed) parts.bed.position.z = 0;
+      }
+
+      // flames flicker
+      flames.forEach((f) => {
+        f.scale.y = 1 + Math.sin(t * 9 + f.userData.offset) * 0.3;
+        f.rotation.y = t * 1.5 + f.userData.offset;
       });
+
       renderer.render(scene, camera);
       state.raf = requestAnimationFrame(loop);
     }
@@ -558,88 +669,70 @@
     return state;
   }
 
-  // Pixel-art SVG fallback (no WebGL / no three.js)
+  // Flat SVG fallback (no WebGL / no three.js) — same 3D-printer character
   function petSvg(mood) {
-    // 16x16 grid scaled up. We draw with rect "pixels".
-    // Body color shifts slightly by mood.
-    const bodyColor = mood === "master" ? "#1a2a06" : "#1a2a06";
-    // Eyes
+    // returns a printer SVG keyed by mood
+    const eye = mood === "fire" ? "#fff3a0" : "#2a3340";
+    const body = ({
+      egg: "#e8d4a8", ok: "#d97a5b", happy: "#c97a8f",
+      fire: "#c84a30", master: "#c69050", sleep: "#5b9aa8"
+    })[mood] || "#d97a5b";
+    const accent = ({
+      egg: "#a88a54", ok: "#8a3a20", happy: "#7a3a48",
+      fire: "#6a1a08", master: "#6a4010", sleep: "#2a4870"
+    })[mood] || "#8a3a20";
+    if (mood === "egg") {
+      return `<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+        <rect x="14" y="74" width="68" height="6" fill="${accent}"/>
+        <rect x="20" y="68" width="56" height="6" fill="#cfe0c0"/>
+        <ellipse cx="48" cy="46" rx="16" ry="22" fill="${body}"/>
+        <rect x="42" y="40" width="3" height="2" fill="${accent}" transform="rotate(-20 43 40)"/>
+        <rect x="50" y="48" width="3" height="2" fill="${accent}" transform="rotate(15 51 48)"/>
+      </svg>`;
+    }
     let eyes, mouth;
     if (mood === "sleep") {
-      eyes  = `<rect x="5" y="7" width="2" height="1" fill="${bodyColor}"/>
-               <rect x="9" y="7" width="2" height="1" fill="${bodyColor}"/>`;
-      mouth = `<rect x="7" y="10" width="2" height="1" fill="${bodyColor}"/>`;
-    } else if (mood === "fire" || mood === "master") {
-      eyes  = `<rect x="5" y="6" width="2" height="2" fill="${bodyColor}"/>
-               <rect x="9" y="6" width="2" height="2" fill="${bodyColor}"/>
-               <rect x="5" y="5" width="2" height="1" fill="${bodyColor}"/>
-               <rect x="9" y="5" width="2" height="1" fill="${bodyColor}"/>`;
-      mouth = `<rect x="6" y="10" width="4" height="1" fill="${bodyColor}"/>
-               <rect x="7" y="11" width="2" height="1" fill="${bodyColor}"/>`;
-    } else if (mood === "happy") {
-      eyes  = `<rect x="5" y="6" width="1" height="2" fill="${bodyColor}"/>
-               <rect x="6" y="6" width="1" height="1" fill="${bodyColor}"/>
-               <rect x="9" y="6" width="1" height="2" fill="${bodyColor}"/>
-               <rect x="10" y="6" width="1" height="1" fill="${bodyColor}"/>`;
-      mouth = `<rect x="6" y="10" width="4" height="1" fill="${bodyColor}"/>`;
-    } else if (mood === "egg") {
-      // a literal egg with a tiny crack
-      return `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="2" width="4" height="1" fill="${bodyColor}"/>
-        <rect x="4" y="3" width="8" height="1" fill="${bodyColor}"/>
-        <rect x="3" y="4" width="10" height="1" fill="${bodyColor}"/>
-        <rect x="3" y="5" width="10" height="1" fill="${bodyColor}"/>
-        <rect x="2" y="6" width="12" height="6" fill="${bodyColor}"/>
-        <rect x="3" y="12" width="10" height="1" fill="${bodyColor}"/>
-        <rect x="4" y="13" width="8" height="1" fill="${bodyColor}"/>
-        <rect x="6" y="14" width="4" height="1" fill="${bodyColor}"/>
-        <rect x="6" y="7" width="1" height="2" fill="#b6cf6f"/>
-        <rect x="7" y="8" width="1" height="1" fill="#b6cf6f"/>
-        <rect x="8" y="7" width="1" height="2" fill="#b6cf6f"/>
-      </svg>`;
+      eyes = `<path d="M 32 50 Q 36 53 40 50" stroke="${eye}" stroke-width="2" fill="none"/>
+              <path d="M 56 50 Q 60 53 64 50" stroke="${eye}" stroke-width="2" fill="none"/>`;
+      mouth = `<rect x="44" y="58" width="8" height="2" fill="${eye}"/>`;
+    } else if (mood === "happy" || mood === "fire" || mood === "master") {
+      eyes = `<rect x="32" y="46" width="6" height="8" fill="${eye}"/>
+              <rect x="58" y="46" width="6" height="8" fill="${eye}"/>`;
+      mouth = `<path d="M 38 58 Q 48 64 58 58" stroke="${eye}" stroke-width="2.5" fill="none"/>`;
     } else {
-      // ok / default
-      eyes  = `<rect x="5" y="6" width="2" height="2" fill="${bodyColor}"/>
-               <rect x="9" y="6" width="2" height="2" fill="${bodyColor}"/>`;
-      mouth = `<rect x="7" y="10" width="2" height="1" fill="${bodyColor}"/>`;
+      eyes = `<rect x="32" y="46" width="5" height="6" fill="${eye}"/>
+              <rect x="59" y="46" width="5" height="6" fill="${eye}"/>`;
+      mouth = `<rect x="42" y="58" width="12" height="2" fill="${eye}"/>`;
     }
-    // Spool-creature body: round-ish blob with two side flanges
-    const fireCrown = (mood === "fire" || mood === "master")
-      ? `<rect x="6" y="0" width="1" height="2" fill="${bodyColor}"/>
-         <rect x="8" y="0" width="1" height="2" fill="${bodyColor}"/>
-         <rect x="7" y="1" width="1" height="1" fill="${bodyColor}"/>
-         <rect x="9" y="1" width="1" height="1" fill="${bodyColor}"/>`
+    const crown = mood === "master"
+      ? `<rect x="40" y="6" width="16" height="4" fill="#ffd24a"/>
+         <polygon points="40,6 44,2 48,6" fill="#ffd24a"/>
+         <polygon points="44,6 48,2 52,6" fill="#ffd24a"/>
+         <polygon points="48,6 52,2 56,6" fill="#ffd24a"/>`
       : "";
-    const crown = (mood === "master")
-      ? `<rect x="5" y="0" width="6" height="1" fill="${bodyColor}"/>
-         <rect x="5" y="1" width="1" height="1" fill="${bodyColor}"/>
-         <rect x="7" y="1" width="2" height="1" fill="${bodyColor}"/>
-         <rect x="10" y="1" width="1" height="1" fill="${bodyColor}"/>`
-      : "";
-    return `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
-      ${crown || fireCrown}
-      <!-- body outline -->
-      <rect x="4" y="2" width="8" height="1" fill="${bodyColor}"/>
-      <rect x="3" y="3" width="10" height="1" fill="${bodyColor}"/>
-      <rect x="3" y="4" width="10" height="9" fill="${bodyColor}"/>
-      <rect x="4" y="13" width="8" height="1" fill="${bodyColor}"/>
-      <!-- spool flanges (the "ears") -->
-      <rect x="1" y="6" width="2" height="5" fill="${bodyColor}"/>
-      <rect x="13" y="6" width="2" height="5" fill="${bodyColor}"/>
-      <rect x="0" y="7" width="1" height="3" fill="${bodyColor}"/>
-      <rect x="15" y="7" width="1" height="3" fill="${bodyColor}"/>
-      <!-- face cutout (lit pixels) -->
-      <rect x="4" y="5" width="8" height="7" fill="#b6cf6f"/>
+    return `<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+      ${crown}
+      <!-- spool -->
+      <circle cx="48" cy="14" r="8" fill="${body}"/>
+      <circle cx="48" cy="14" r="3" fill="${accent}"/>
+      <!-- frame uprights -->
+      <rect x="14" y="20" width="5" height="50" fill="${body}"/>
+      <rect x="77" y="20" width="5" height="50" fill="${body}"/>
+      <!-- top crossbar -->
+      <rect x="12" y="18" width="72" height="5" fill="${body}"/>
+      <!-- base -->
+      <rect x="10" y="78" width="76" height="8" fill="${accent}"/>
+      <!-- bed -->
+      <rect x="18" y="72" width="60" height="6" fill="#cfe0c0"/>
+      <!-- x-axis -->
+      <rect x="14" y="40" width="68" height="3" fill="#3a4252"/>
+      <!-- print head (face) -->
+      <rect x="30" y="42" width="36" height="22" rx="3" fill="${body}"/>
       ${eyes}
       ${mouth}
-      <!-- cheeks for happy/fire moods -->
-      ${(mood === "happy" || mood === "fire" || mood === "master")
-        ? `<rect x="4" y="9" width="1" height="1" fill="${bodyColor}" opacity=".5"/>
-           <rect x="11" y="9" width="1" height="1" fill="${bodyColor}" opacity=".5"/>`
-        : ""}
-      <!-- feet -->
-      <rect x="5" y="14" width="2" height="1" fill="${bodyColor}"/>
-      <rect x="9" y="14" width="2" height="1" fill="${bodyColor}"/>
+      <!-- nozzle -->
+      <polygon points="44,64 52,64 48,72" fill="#3a4252"/>
+      ${mood === "fire" ? `<polygon points="42,72 48,82 54,72" fill="#ffa040"/>` : ""}
     </svg>`;
   }
 
