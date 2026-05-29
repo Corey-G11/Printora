@@ -161,6 +161,188 @@
   function refreshHomeProgressCard() {
     const card = document.getElementById("progressCard");
     if (card) renderProgressInto(card);
+    const pet = document.getElementById("petScreen");
+    if (pet) renderPetInto(pet);
+  }
+
+  /* ============================================================
+     PET — the Printora Tamagotchi creature
+     ============================================================ */
+  function petMood() {
+    const hour = new Date().getHours();
+    const lvl = level();
+    const streak = PROGRESS.streakDays;
+    if (hour >= 22 || hour < 6) return "sleep";
+    if (lvl >= 10) return "master";
+    if (streak >= 7) return "fire";
+    if (streak >= 3) return "happy";
+    if (lvl >= 5)    return "happy";
+    if (PROGRESS.xp === 0) return "egg";
+    return "ok";
+  }
+  function petName() {
+    const lvl = level();
+    if (lvl >= 10) return "PRINT-MASTER";
+    if (lvl >= 5)  return "PRINTORA";
+    if (PROGRESS.xp === 0) return "EGG";
+    return "PRINTLING";
+  }
+  function petLines(mood) {
+    const lines = {
+      egg:    ["TAP A CARD!", "FEED ME XP!", "HATCH ME!"],
+      ok:     ["LET'S PRINT!", "HI FRIEND!", "MORE XP?"],
+      happy:  ["FEELING GOOD!", "GREAT JOB!", "KEEP IT UP!"],
+      fire:   ["ON FIRE!", "UNSTOPPABLE!", "STREAK MODE!"],
+      master: ["LEGEND!", "PRINT GOD!", "MAX LEVEL!"],
+      sleep:  ["ZZZ...", "SHHH...", "DREAMING..."]
+    };
+    const arr = lines[mood] || lines.ok;
+    const day = Math.floor(Date.now() / 60000); // change every minute
+    return arr[day % arr.length];
+  }
+
+  // Pixel-art SVG of the pet — a printer spool creature.
+  // Different moods swap eye/mouth.
+  function petSvg(mood) {
+    // 16x16 grid scaled up. We draw with rect "pixels".
+    // Body color shifts slightly by mood.
+    const bodyColor = mood === "master" ? "#1a2a06" : "#1a2a06";
+    // Eyes
+    let eyes, mouth;
+    if (mood === "sleep") {
+      eyes  = `<rect x="5" y="7" width="2" height="1" fill="${bodyColor}"/>
+               <rect x="9" y="7" width="2" height="1" fill="${bodyColor}"/>`;
+      mouth = `<rect x="7" y="10" width="2" height="1" fill="${bodyColor}"/>`;
+    } else if (mood === "fire" || mood === "master") {
+      eyes  = `<rect x="5" y="6" width="2" height="2" fill="${bodyColor}"/>
+               <rect x="9" y="6" width="2" height="2" fill="${bodyColor}"/>
+               <rect x="5" y="5" width="2" height="1" fill="${bodyColor}"/>
+               <rect x="9" y="5" width="2" height="1" fill="${bodyColor}"/>`;
+      mouth = `<rect x="6" y="10" width="4" height="1" fill="${bodyColor}"/>
+               <rect x="7" y="11" width="2" height="1" fill="${bodyColor}"/>`;
+    } else if (mood === "happy") {
+      eyes  = `<rect x="5" y="6" width="1" height="2" fill="${bodyColor}"/>
+               <rect x="6" y="6" width="1" height="1" fill="${bodyColor}"/>
+               <rect x="9" y="6" width="1" height="2" fill="${bodyColor}"/>
+               <rect x="10" y="6" width="1" height="1" fill="${bodyColor}"/>`;
+      mouth = `<rect x="6" y="10" width="4" height="1" fill="${bodyColor}"/>`;
+    } else if (mood === "egg") {
+      // a literal egg with a tiny crack
+      return `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="2" width="4" height="1" fill="${bodyColor}"/>
+        <rect x="4" y="3" width="8" height="1" fill="${bodyColor}"/>
+        <rect x="3" y="4" width="10" height="1" fill="${bodyColor}"/>
+        <rect x="3" y="5" width="10" height="1" fill="${bodyColor}"/>
+        <rect x="2" y="6" width="12" height="6" fill="${bodyColor}"/>
+        <rect x="3" y="12" width="10" height="1" fill="${bodyColor}"/>
+        <rect x="4" y="13" width="8" height="1" fill="${bodyColor}"/>
+        <rect x="6" y="14" width="4" height="1" fill="${bodyColor}"/>
+        <rect x="6" y="7" width="1" height="2" fill="#b6cf6f"/>
+        <rect x="7" y="8" width="1" height="1" fill="#b6cf6f"/>
+        <rect x="8" y="7" width="1" height="2" fill="#b6cf6f"/>
+      </svg>`;
+    } else {
+      // ok / default
+      eyes  = `<rect x="5" y="6" width="2" height="2" fill="${bodyColor}"/>
+               <rect x="9" y="6" width="2" height="2" fill="${bodyColor}"/>`;
+      mouth = `<rect x="7" y="10" width="2" height="1" fill="${bodyColor}"/>`;
+    }
+    // Spool-creature body: round-ish blob with two side flanges
+    const fireCrown = (mood === "fire" || mood === "master")
+      ? `<rect x="6" y="0" width="1" height="2" fill="${bodyColor}"/>
+         <rect x="8" y="0" width="1" height="2" fill="${bodyColor}"/>
+         <rect x="7" y="1" width="1" height="1" fill="${bodyColor}"/>
+         <rect x="9" y="1" width="1" height="1" fill="${bodyColor}"/>`
+      : "";
+    const crown = (mood === "master")
+      ? `<rect x="5" y="0" width="6" height="1" fill="${bodyColor}"/>
+         <rect x="5" y="1" width="1" height="1" fill="${bodyColor}"/>
+         <rect x="7" y="1" width="2" height="1" fill="${bodyColor}"/>
+         <rect x="10" y="1" width="1" height="1" fill="${bodyColor}"/>`
+      : "";
+    return `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+      ${crown || fireCrown}
+      <!-- body outline -->
+      <rect x="4" y="2" width="8" height="1" fill="${bodyColor}"/>
+      <rect x="3" y="3" width="10" height="1" fill="${bodyColor}"/>
+      <rect x="3" y="4" width="10" height="9" fill="${bodyColor}"/>
+      <rect x="4" y="13" width="8" height="1" fill="${bodyColor}"/>
+      <!-- spool flanges (the "ears") -->
+      <rect x="1" y="6" width="2" height="5" fill="${bodyColor}"/>
+      <rect x="13" y="6" width="2" height="5" fill="${bodyColor}"/>
+      <rect x="0" y="7" width="1" height="3" fill="${bodyColor}"/>
+      <rect x="15" y="7" width="1" height="3" fill="${bodyColor}"/>
+      <!-- face cutout (lit pixels) -->
+      <rect x="4" y="5" width="8" height="7" fill="#b6cf6f"/>
+      ${eyes}
+      ${mouth}
+      <!-- cheeks for happy/fire moods -->
+      ${(mood === "happy" || mood === "fire" || mood === "master")
+        ? `<rect x="4" y="9" width="1" height="1" fill="${bodyColor}" opacity=".5"/>
+           <rect x="11" y="9" width="1" height="1" fill="${bodyColor}" opacity=".5"/>`
+        : ""}
+      <!-- feet -->
+      <rect x="5" y="14" width="2" height="1" fill="${bodyColor}"/>
+      <rect x="9" y="14" width="2" height="1" fill="${bodyColor}"/>
+    </svg>`;
+  }
+
+  function renderPetInto(host) {
+    const mood = petMood();
+    const moodClass = (mood === "sleep") ? "mood-sleep"
+                    : (mood === "fire" || mood === "master") ? "mood-celebrate"
+                    : (mood === "happy") ? "mood-happy" : "";
+    const moodLabel = ({
+      egg: "Egg", ok: "Idle", happy: "Happy",
+      fire: "On Fire", master: "Legendary", sleep: "Sleeping"
+    })[mood] || "Idle";
+    const xp = PROGRESS.xp, lvl = level(), inLvl = xpInLevel();
+    const totalSegs = 10;
+    const onSegs = Math.max(1, Math.round((inLvl / 100) * totalSegs));
+    let segs = "";
+    for (let i = 0; i < totalSegs; i++) {
+      segs += `<i class="${i < onSegs ? "on" : ""}"></i>`;
+    }
+    const zz = (mood === "sleep")
+      ? `<span class="pet-zz">Z</span><span class="pet-zz">Z</span>`
+      : "";
+    host.innerHTML = `
+      <div class="pet-stage">
+        <div class="pet-name">${esc(petName())}</div>
+        <div class="pet-mood">${esc(moodLabel)}</div>
+        <div class="pet-speech">${esc(petLines(mood))}</div>
+        <div class="pet ${moodClass}">
+          ${zz}
+          ${petSvg(mood)}
+        </div>
+        <div class="pet-stats">
+          <span class="pet-stat"><span class="ps-ico">⭐</span>Lv ${lvl}</span>
+          <span class="pet-stat"><span class="ps-ico">⚡</span>${xp} XP</span>
+          <span class="pet-stat"><span class="ps-ico">🔥</span>${PROGRESS.streakDays}d</span>
+        </div>
+        <div class="pet-bar">${segs}</div>
+        <div class="pet-bar-label">Energy · ${inLvl}/100 to Lv ${lvl + 1}</div>
+        <div class="pet-actions">
+          <button class="pet-btn" type="button" data-act="feed"  aria-label="Feed (Guides)">🍔</button>
+          <button class="pet-btn" type="button" data-act="play"  aria-label="Play (Models)">🎮</button>
+          <button class="pet-btn" type="button" data-act="clean" aria-label="Clean (Fix)">🧽</button>
+          <button class="pet-btn" type="button" data-act="train" aria-label="Train (Setups)">💪</button>
+        </div>
+      </div>`;
+    host.querySelectorAll(".pet-btn").forEach((b) => {
+      b.addEventListener("click", () => {
+        const map = { feed: "guides", play: "models", clean: "fix", train: "setups" };
+        const dest = map[b.dataset.act] || "home";
+        // little squish animation via class
+        const petEl = host.querySelector(".pet");
+        if (petEl) {
+          petEl.style.transform = "scale(1.15)";
+          setTimeout(() => { petEl.style.transform = ""; }, 180);
+        }
+        if (navigator.vibrate) try { navigator.vibrate(10); } catch (e) {}
+        go(dest);
+      });
+    });
   }
   function renderProgressInto(card) {
     const lvl = level(), inLvl = xpInLevel();
@@ -280,11 +462,12 @@
 
   routes.home = function () {
     view.innerHTML = "";
-    view.append(el("div", "hero", `
-      <div class="hero-badge"><span>🧵</span></div>
-      <h1>Printora</h1>
-      <p>Your one-stop shop for everything 3D printing — setups, models, guides & fixes.</p>
-    `));
+
+    // tamagotchi pet screen
+    const pet = el("div", "pet-screen");
+    pet.id = "petScreen";
+    renderPetInto(pet);
+    view.append(pet);
 
     // progress card
     const pCard = el("div", "progress-card");
