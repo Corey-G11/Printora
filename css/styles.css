@@ -1,40 +1,119 @@
 /* ============================================================
    Printora — Tamagotchi / LCD retro theme
-   Pixel font, dot-matrix screens, virtual pet companion
+   Game Boy slate (light) + Charcoal LCD (dark)
    ============================================================ */
-:root {
-  /* shell — the plastic case around the LCD screen */
-  --shell-0: #f0c75e;
-  --shell-1: #e0a93a;
-  --shell-2: #b9821e;
-  --shell-3: #6b4a0a;
+:root,
+[data-theme="light"] {
+  /* shell — slate-blue Game Boy case */
+  --shell-0: #b0bad8;
+  --shell-1: #8a96b8;
+  --shell-2: #5b6c8f;
+  --shell-3: #2a3340;
 
-  /* LCD screen — classic monochrome green */
-  --lcd-0: #b6cf6f;     /* lit pixel area */
-  --lcd-1: #9bb858;     /* mid */
-  --lcd-2: #6f8a3a;     /* dim border */
-  --lcd-pix: #1a2a06;   /* dark "on" pixel */
-  --lcd-pix-soft: rgba(26, 42, 6, 0.35);
-  --lcd-glare: rgba(255, 255, 255, 0.18);
+  /* LCD — pale celadon */
+  --lcd-0: #cfe0c0;
+  --lcd-1: #b0c8a8;
+  --lcd-2: #9bb89a;
+  --lcd-pix: #2a3340;
+  --lcd-pix-soft: rgba(42, 51, 64, 0.35);
+  --lcd-glare: rgba(255, 255, 255, 0.22);
 
-  /* status / accent — Tamagotchi-bright */
-  --pink: #ff5d8f;
-  --orange: #ff8a2b;
-  --cyan: #2bd1ff;
-  --violet: #a55cff;
-  --ok: #2faa3e;
-  --mid: #d4a017;
-  --hard: #c0392b;
+  /* accents */
+  --pink: #c97a8f;
+  --orange: #d97a5b;
+  --cyan: #5b9aa8;
+  --violet: #8a7ab8;
+  --ok: #5b8a5b;
+  --mid: #c69050;
+  --hard: #b85a4a;
 
   --txt: var(--lcd-pix);
-  --muted: #2d3f0a;
-  --faint: #4d6418;
+  --muted: #4a5468;
+  --faint: #6a7488;
 
+  /* difficulty pill backgrounds (paled out) */
+  --pill-ok-bg: #b8d0a8;
+  --pill-mid-bg: #e0c890;
+  --pill-hard-bg: #d8a89a;
+
+  /* compat cell backgrounds */
+  --compat-yes-bg: #b8d0a8;
+  --compat-maybe-bg: #e0c890;
+  --compat-no-bg: #d8a89a;
+
+  /* layout (shared) */
   --tabbar-h: 78px;
   --maxw: 720px;
   --ease: cubic-bezier(.4, 0, .2, 1);
-
   --pixel-font: "Tama", ui-monospace, "Courier New", monospace;
+}
+
+[data-theme="dark"] {
+  /* shell — charcoal case */
+  --shell-0: #4a5060;
+  --shell-1: #3a3f4a;
+  --shell-2: #2a2f38;
+  --shell-3: #1f242e;
+
+  /* LCD — backlit dim cyan-green */
+  --lcd-0: #4a6e62;
+  --lcd-1: #3d5e54;
+  --lcd-2: #2e4a40;
+  --lcd-pix: #d6e8d8;
+  --lcd-pix-soft: rgba(214, 232, 216, 0.35);
+  --lcd-glare: rgba(214, 232, 216, 0.12);
+
+  /* accents */
+  --pink: #e89bb0;
+  --orange: #ffb05c;
+  --cyan: #7bd0c0;
+  --violet: #b89bd0;
+  --ok: #9bd0a0;
+  --mid: #ffd28a;
+  --hard: var(--pill-hard-bg);
+
+  --txt: var(--lcd-pix);
+  --muted: #b8c8b8;
+  --faint: #8a988a;
+
+  --pill-ok-bg: #5a7e5e;
+  --pill-mid-bg: #806848;
+  --pill-hard-bg: #804a48;
+
+  --compat-yes-bg: #5a7e5e;
+  --compat-maybe-bg: #806848;
+  --compat-no-bg: #804a48;
+}
+
+/* auto pick dark when system prefers it AND user hasn't overridden */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --shell-0: #4a5060;
+    --shell-1: #3a3f4a;
+    --shell-2: #2a2f38;
+    --shell-3: #1f242e;
+    --lcd-0: #4a6e62;
+    --lcd-1: #3d5e54;
+    --lcd-2: #2e4a40;
+    --lcd-pix: #d6e8d8;
+    --lcd-glare: rgba(214, 232, 216, 0.12);
+    --pink: #e89bb0;
+    --orange: #ffb05c;
+    --cyan: #7bd0c0;
+    --violet: #b89bd0;
+    --ok: #9bd0a0;
+    --mid: #ffd28a;
+    --hard: var(--pill-hard-bg);
+    --txt: var(--lcd-pix);
+    --muted: #b8c8b8;
+    --faint: #8a988a;
+    --pill-ok-bg: #5a7e5e;
+    --pill-mid-bg: #806848;
+    --pill-hard-bg: #804a48;
+    --compat-yes-bg: #5a7e5e;
+    --compat-maybe-bg: #806848;
+    --compat-no-bg: #804a48;
+  }
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -74,7 +153,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 .bg-grid {
   position: absolute; inset: 0;
   background-image:
-    radial-gradient(circle, rgba(107, 74, 10, .25) 1px, transparent 1.2px);
+    radial-gradient(circle, color-mix(in srgb, var(--shell-3) 25%, transparent) 1px, transparent 1.2px);
   background-size: 6px 6px;
   opacity: .35;
   -webkit-mask-image: radial-gradient(120% 80% at 50% 30%, transparent 35%, #000 90%);
@@ -84,7 +163,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 .bg-vignette {
   position: absolute; inset: 0;
   background:
-    radial-gradient(150% 100% at 50% 30%, transparent 40%, rgba(107, 74, 10, .55) 100%);
+    radial-gradient(150% 100% at 50% 30%, transparent 40%, color-mix(in srgb, var(--shell-3) 55%, transparent) 100%);
 }
 
 /* ---------- top brand bar (shell rim) ---------- */
@@ -180,8 +259,8 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   content: "";
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(26, 42, 6, .08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26, 42, 6, .08) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--lcd-pix) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--lcd-pix) 8%, transparent) 1px, transparent 1px);
   background-size: 3px 3px;
   pointer-events: none;
   border-radius: inherit;
@@ -221,8 +300,8 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   content: "";
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(26, 42, 6, .10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26, 42, 6, .10) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--lcd-pix) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--lcd-pix) 10%, transparent) 1px, transparent 1px);
   background-size: 4px 4px;
   pointer-events: none;
   mix-blend-mode: multiply;
@@ -262,7 +341,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   width: 96px; height: 96px;
   image-rendering: pixelated;
   animation: pet-bob 2.4s ease-in-out infinite;
-  filter: drop-shadow(0 4px 0 rgba(26, 42, 6, .25));
+  filter: drop-shadow(0 4px 0 color-mix(in srgb, var(--lcd-pix) 25%, transparent));
 }
 .pet svg { width: 100%; height: 100%; display: block; }
 @keyframes pet-bob {
@@ -286,8 +365,8 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   width: 180px; height: 180px;
   image-rendering: auto;
   animation: none;
-  filter: drop-shadow(0 8px 4px rgba(26, 42, 6, .25));
-  background: radial-gradient(circle at 50% 90%, rgba(26, 42, 6, .25) 0%, transparent 55%);
+  filter: drop-shadow(0 8px 4px color-mix(in srgb, var(--lcd-pix) 25%, transparent));
+  background: radial-gradient(circle at 50% 90%, color-mix(in srgb, var(--lcd-pix) 25%, transparent) 0%, transparent 55%);
   overflow: visible;
 }
 .pet.pet-3d canvas {
@@ -356,7 +435,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   display: inline-flex; align-items: center; gap: 5px;
   font-size: 10px; font-weight: 900; letter-spacing: 1px;
   color: var(--lcd-pix); text-transform: uppercase;
-  background: rgba(26, 42, 6, .08);
+  background: color-mix(in srgb, var(--lcd-pix) 8%, transparent);
   border: 2px solid var(--lcd-pix);
   border-radius: 6px;
   padding: 4px 8px;
@@ -367,7 +446,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 .pet-bar {
   margin-top: 12px;
   position: relative; z-index: 1;
-  background: rgba(26, 42, 6, .12);
+  background: color-mix(in srgb, var(--lcd-pix) 12%, transparent);
   border: 2px solid var(--lcd-pix);
   border-radius: 4px;
   height: 14px;
@@ -548,9 +627,9 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   padding: 4px 8px; border-radius: 3px; flex: none; text-transform: uppercase;
   border: 2px solid var(--lcd-pix);
 }
-.pill-ok   { background: #c6e08a; color: var(--lcd-pix); }
-.pill-mid  { background: #f0d35a; color: var(--lcd-pix); }
-.pill-hard { background: #f0918a; color: var(--lcd-pix); }
+.pill-ok   { background: var(--pill-ok-bg); color: var(--lcd-pix); }
+.pill-mid  { background: var(--pill-mid-bg); color: var(--lcd-pix); }
+.pill-hard { background: var(--pill-hard-bg); color: var(--lcd-pix); }
 
 /* settings grid */
 .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -579,7 +658,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 .bars { display: inline-flex; gap: 3px; }
 .bars i {
   width: 14px; height: 14px;
-  background: rgba(26, 42, 6, .15);
+  background: color-mix(in srgb, var(--lcd-pix) 15%, transparent);
   border: 2px solid var(--lcd-pix);
   border-radius: 2px;
 }
@@ -750,9 +829,9 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .compat-cell b { font-size: 10px; font-weight: 900; color: var(--lcd-pix); text-transform: uppercase; letter-spacing: .5px; }
 .compat-cell span { font-size: 16px; }
-.compat-cell.c-yes   { background: #c6e08a; }
-.compat-cell.c-maybe { background: #f0d35a; }
-.compat-cell.c-no    { background: #f0918a; }
+.compat-cell.c-yes   { background: var(--pill-ok-bg); }
+.compat-cell.c-maybe { background: var(--pill-mid-bg); }
+.compat-cell.c-no    { background: var(--pill-hard-bg); }
 @media (min-width: 520px) { .compat-grid { grid-template-columns: repeat(7, 1fr); } }
 
 /* ============================================================
@@ -789,8 +868,8 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   content: "";
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(26, 42, 6, .08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26, 42, 6, .08) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--lcd-pix) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--lcd-pix) 8%, transparent) 1px, transparent 1px);
   background-size: 3px 3px;
   pointer-events: none;
   border-radius: inherit;
@@ -818,7 +897,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .xp-bar {
   height: 14px;
-  background: rgba(26, 42, 6, .15);
+  background: color-mix(in srgb, var(--lcd-pix) 15%, transparent);
   border: 2px solid var(--lcd-pix);
   border-radius: 3px;
   overflow: hidden;
@@ -967,8 +1046,8 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   content: "";
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(26, 42, 6, .08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26, 42, 6, .08) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--lcd-pix) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--lcd-pix) 8%, transparent) 1px, transparent 1px);
   background-size: 3px 3px;
   pointer-events: none;
   border-radius: inherit;
