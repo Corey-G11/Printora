@@ -211,7 +211,11 @@ DB.guides = [
       { h: "Captive nuts", b: "Model a hexagonal pocket and drop a standard nut in (often suspended mid-print with a 'nut trap'). Cheap and very strong for bolts." },
       { h: "Bolt-through", b: "For the strongest joint, run a bolt fully through both parts into a nut/insert on the far side." }
     ],
-    tips: ["M3 heat-set inserts are the hobby standard — buy an assortment.", "Press inserts in dead straight or threads will be skewed.", "More walls/perimeters around a boss = stronger threads."]
+    tips: ["M3 heat-set inserts are the hobby standard — buy an assortment.", "Press inserts in dead straight or threads will be skewed.", "More walls/perimeters around a boss = stronger threads."],
+    shopLinks: [
+      { label: "M3/M4 heat-set inserts", query: "m3 m4 heat set inserts brass" },
+      { label: "Insert tip (soldering iron)", query: "soldering iron heat set insert tip" }
+    ]
   },
   {
     id: "snapfit", cat: "join", title: "Snap-Fits, Pins & Joinery", emoji: "🧩",
@@ -235,7 +239,12 @@ DB.guides = [
       { h: "Paint", b: "Acrylics (brush or rattle-can) work great on primed prints. Light coats, let each dry. Finish with matte/gloss clear-coat to protect." },
       { h: "Smooth ABS with vapour", b: "Acetone vapour smoothing melts the surface glassy-smooth on ABS/ASA. Do it in a sealed container, ventilated, away from flames." }
     ],
-    tips: ["Primer is what makes paint look pro — never skip it.", "XTC-3D or thin epoxy coatings smooth + strengthen in one step."]
+    tips: ["Primer is what makes paint look pro — never skip it.", "XTC-3D or thin epoxy coatings smooth + strengthen in one step."],
+    shopLinks: [
+      { label: "Sandpaper (120–2000 grit)", query: "wet dry sandpaper assortment 120 2000" },
+      { label: "Filler primer", query: "rust-oleum filler primer" },
+      { label: "Acetone (ABS smoothing)", query: "100% pure acetone gallon" }
+    ]
   },
   {
     id: "drying", cat: "care", title: "Drying & Storing Filament", emoji: "🌡️",
@@ -246,7 +255,13 @@ DB.guides = [
       { h: "Store it dry", b: "Vacuum bags or airtight boxes with rechargeable silica gel desiccant. Nylon/TPU/PC should print straight from a dry box." },
       { h: "Recharge desiccant", b: "Bake colour-indicating silica when it changes colour, then reuse — cheaper than replacing." }
     ],
-    tips: ["A cheap hygrometer in the box tells you when humidity climbs.", "Don't exceed a material's glass-transition temp when drying or the spool fuses."]
+    tips: ["A cheap hygrometer in the box tells you when humidity climbs.", "Don't exceed a material's glass-transition temp when drying or the spool fuses."],
+    shopLinks: [
+      { label: "Sunlu S2 filament dryer", query: "sunlu filament dryer s2" },
+      { label: "Vacuum bags + pump", query: "filament vacuum storage bags" },
+      { label: "Rechargeable silica gel", query: "rechargeable silica gel desiccant" },
+      { label: "Mini hygrometer", query: "mini digital hygrometer" }
+    ]
   },
   {
     id: "maintenance", cat: "care", title: "Printer Maintenance", emoji: "🛠️",
@@ -258,7 +273,13 @@ DB.guides = [
       { h: "Inspect the PTFE tube", b: "A degraded/gappy PTFE tube at the hotend causes clogs and stringing — re-seat or replace it." },
       { h: "Tighten & dust", b: "Re-check screws/eccentric nuts, blow out fans, and keep the bed surface grease-free." }
     ],
-    tips: ["Hardened steel nozzle is mandatory for carbon/glass-filled filament.", "Keep spare nozzles, PTFE and a build sheet on hand — they're consumables."]
+    tips: ["Hardened steel nozzle is mandatory for carbon/glass-filled filament.", "Keep spare nozzles, PTFE and a build sheet on hand — they're consumables."],
+    shopLinks: [
+      { label: "Brass 0.4mm nozzles", query: "0.4mm brass nozzle mk8 assortment" },
+      { label: "Hardened steel nozzles", query: "hardened steel nozzle 0.4mm" },
+      { label: "Capricorn PTFE tube", query: "capricorn ptfe bowden tube 1.75mm" },
+      { label: "Nozzle cleaning needles", query: "0.4mm nozzle cleaning needles" }
+    ]
   }
 ];
 
@@ -272,7 +293,11 @@ DB.troubleshooting = [
   {
     id: "warping", symptom: "Corners lifting / warping", emoji: "🌀",
     causes: ["Bed too cool", "Draughts / fast cooling", "Poor adhesion", "High-shrinkage material (ABS)"],
-    fixes: ["Raise bed temp 5–10 °C", "Add a brim or raft", "Enclose the printer / block draughts", "Clean the plate + glue stick", "Reduce first-layer fan to 0%"]
+    fixes: ["Raise bed temp 5–10 °C", "Add a brim or raft", "Enclose the printer / block draughts", "Clean the plate + glue stick", "Reduce first-layer fan to 0%"],
+    shopLinks: [
+      { label: "Elmer's purple glue stick", query: "elmer's purple glue stick 3 pack" },
+      { label: "Magigoo adhesive", query: "magigoo 3d printing adhesive" }
+    ]
   },
   {
     id: "first-layer", symptom: "First layer won't stick / gaps", emoji: "🚫",
@@ -312,7 +337,12 @@ DB.troubleshooting = [
   {
     id: "clog", symptom: "Nozzle clog / no extrusion", emoji: "🧱",
     causes: ["Debris/charred filament", "Heat creep", "Degraded PTFE tube", "Too-low temp for material"],
-    fixes: ["Cold/atomic pull", "Improve hotend fan / reduce retraction", "Re-seat or replace PTFE tube", "Use a cleaning needle/filament", "Replace the nozzle if blocked solid"]
+    fixes: ["Cold/atomic pull", "Improve hotend fan / reduce retraction", "Re-seat or replace PTFE tube", "Use a cleaning needle/filament", "Replace the nozzle if blocked solid"],
+    shopLinks: [
+      { label: "Cleaning needles", query: "0.4mm nozzle cleaning needles" },
+      { label: "Spare nozzles", query: "0.4mm brass nozzle mk8 assortment" },
+      { label: "Capricorn PTFE tube", query: "capricorn ptfe bowden tube 1.75mm" }
+    ]
   },
   {
     id: "topgaps", symptom: "Gaps / holes in top surface", emoji: "🕳️",
