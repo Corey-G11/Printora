@@ -1278,11 +1278,96 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .install-banner .ib-x:active { transform: translateY(2px); box-shadow: none; }
 
+/* ---------- welcome modal (first launch) ---------- */
+.welcome-modal {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(20, 22, 28, 0.72);
+  animation: welcome-fade-in .2s var(--ease);
+}
+.welcome-modal.closing { animation: welcome-fade-out .2s var(--ease) forwards; }
+@keyframes welcome-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes welcome-fade-out { from { opacity: 1; } to { opacity: 0; } }
+.welcome-card {
+  max-width: 360px; width: 100%;
+  background: var(--lcd-0);
+  border: 4px solid var(--lcd-pix);
+  border-radius: 10px;
+  padding: 24px 22px 18px;
+  box-shadow: 6px 6px 0 var(--shell-3);
+  text-align: center;
+  font-family: var(--pixel-font);
+  animation: welcome-pop .25s var(--ease);
+}
+@keyframes welcome-pop {
+  from { transform: scale(.86) translateY(8px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+.welcome-emoji { font-size: 48px; line-height: 1; margin-bottom: 10px; }
+.welcome-title {
+  margin: 0 0 10px; font-size: 16px; font-weight: 900;
+  letter-spacing: .5px; color: var(--lcd-pix);
+}
+.welcome-text {
+  margin: 0 0 18px; font-size: 12.5px; line-height: 1.55;
+  color: var(--lcd-pix); font-weight: 700;
+}
+.welcome-dots {
+  display: flex; justify-content: center; gap: 6px; margin-bottom: 14px;
+}
+.welcome-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--shell-1); border: 2px solid var(--lcd-pix);
+}
+.welcome-dot.active { background: var(--orange); }
+.welcome-actions {
+  display: flex; gap: 8px; justify-content: stretch;
+}
+.welcome-skip, .welcome-next {
+  flex: 1;
+  border-radius: 6px; padding: 10px 14px;
+  font-size: 11.5px; font-weight: 900;
+  letter-spacing: .5px; text-transform: uppercase;
+  cursor: pointer; font-family: var(--pixel-font);
+  box-shadow: 2px 2px 0 var(--shell-3);
+  transition: transform .08s var(--ease);
+}
+.welcome-skip {
+  background: var(--shell-0); color: var(--shell-3);
+  border: 2.5px solid var(--shell-3);
+  flex: 0 0 35%;
+}
+.welcome-next {
+  background: var(--orange); color: var(--shell-3);
+  border: 2.5px solid var(--lcd-pix);
+}
+.welcome-skip:active, .welcome-next:active { transform: translate(2px, 2px); box-shadow: none; }
+
+/* ---------- confetti ---------- */
+.confetti-layer {
+  position: fixed; left: 0; right: 0; top: 60px;
+  pointer-events: none; z-index: 250; overflow: visible;
+}
+.confetti-piece {
+  position: absolute; top: 0;
+  width: 8px; height: 12px;
+  border-radius: 1px;
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(.4, .8, .6, 1);
+  animation-fill-mode: forwards;
+}
+@keyframes confetti-fall {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--drift, 0), 110vh) rotate(var(--spin, 720deg)); opacity: 0; }
+}
+
 /* ---------- accessibility ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .install-banner { transition: none; }
   .pet { animation: none !important; }
+  .confetti-layer { display: none !important; }
   /* accordion uses grid-rows transition — without it the body never visually
      opens. Force the rows immediately so content is still reachable. */
   .acc-body { grid-template-rows: 1fr !important; }

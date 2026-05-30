@@ -116,10 +116,63 @@ DB.materials = [
       "Layer adhesion is weak if under-temp — run it hot.",
       "Warps aggressively; a heated chamber makes life much easier."
     ]
+  },
+  {
+    id: "pla-plus", name: "PLA+", emoji: "💪", tagline: "Tougher PLA — same easy printing",
+    difficulty: "Beginner",
+    nozzle: "210–230 °C", bed: "55–65 °C", fan: "100%",
+    speed: "50–80 mm/s", retraction: "Direct 0.5–1 mm · Bowden 4–6 mm",
+    firstLayer: "220 °C nozzle / 60 °C bed, 50% speed",
+    enclosure: "Not needed",
+    flow: "≈100% — same as PLA",
+    strength: 4, flexibility: 2, heatResist: 1, ease: 5,
+    storage: "Keep dry; absorbs moisture slowly. Dry 45 °C / 4 h if brittle.",
+    uses: ["Functional indoor parts", "Cosplay & props that take impact", "Toys that survive being dropped", "Replacements for plain PLA where it cracks"],
+    avoid: ["Anything near heat (still softens ~55 °C)", "Outdoor parts in sun"],
+    tips: [
+      "Prints like PLA but usually wants 5–10 °C hotter — start at 215 °C.",
+      "Tougher and less brittle than PLA, but heat resistance is the same.",
+      "Same fan/speed as PLA — don't drop the fan."
+    ]
+  },
+  {
+    id: "silk-pla", name: "Silk PLA", emoji: "✨", tagline: "Shiny PLA for showpiece prints",
+    difficulty: "Beginner",
+    nozzle: "200–220 °C", bed: "55–65 °C", fan: "100%",
+    speed: "30–50 mm/s", retraction: "Direct 0.6–1 mm · Bowden 5–6 mm",
+    firstLayer: "215 °C nozzle / 60 °C bed, 50% speed",
+    enclosure: "Not needed",
+    flow: "≈100% — silk additives can make it slightly stringy, slow down",
+    strength: 3, flexibility: 1, heatResist: 1, ease: 4,
+    storage: "Same as PLA — dry 45 °C / 4 h if dull or popping.",
+    uses: ["Vases & decorative prints", "Gifts and display pieces", "Anything where the shine is the point"],
+    avoid: ["Supports (leaves marks on the shiny finish)", "Functional/load-bearing parts"],
+    tips: [
+      "Print 5–10 °C hotter than plain PLA for max shine.",
+      "Slow down — high speeds dull the silk effect and cause stringing.",
+      "Avoid supports on visible faces; the marks show badly on shiny PLA."
+    ]
+  },
+  {
+    id: "wood-fill", name: "Wood-fill PLA", emoji: "🪵", tagline: "PLA with real wood dust — sands & stains",
+    difficulty: "Intermediate",
+    nozzle: "200–215 °C", bed: "55 °C", fan: "100%",
+    speed: "30–50 mm/s", retraction: "Direct 0.8–1.2 mm · Bowden 5–7 mm",
+    firstLayer: "210 °C nozzle / 60 °C bed, 50% speed",
+    enclosure: "Not needed",
+    flow: "≈100% — vary speed mid-print to fake wood grain",
+    strength: 2, flexibility: 1, heatResist: 1, ease: 3,
+    storage: "Hygroscopic — store with desiccant. Dry 45 °C / 4 h if fuzzy.",
+    uses: ["Decorative furniture-style prints", "Picture frames, planters", "Anything you want to sand smooth + stain"],
+    avoid: ["Small nozzles (0.4 mm clogs with high-fill variants)", "Load-bearing parts"],
+    tips: [
+      "Use a HARDENED steel nozzle — wood fibers wear brass fast.",
+      "Print at varied speeds (40 then 60 mm/s) to expose grain-like layer texture.",
+      "Sand and apply wood stain like real wood for a convincing finish.",
+      "Skip the part-cooling fan on the last few layers for a darker finish."
+    ]
   }
 ];
-
-/* ---------- GUIDES (incl. connecting / joining pieces) ---------- */
 DB.guideCategories = [
   { id: "start",   name: "Getting Started", emoji: "🚀" },
   { id: "quality", name: "Print Quality",   emoji: "✨" },
@@ -164,6 +217,25 @@ DB.guides = [
       { h: "Add a helper if needed", b: "Brim for tall/small-footprint parts, raft for very warpy materials, glue stick or hairspray as a release+grip layer." }
     ],
     tips: ["Too sticky? Raise Z-offset slightly or add a release agent so you don't gouge the plate.", "Draughts cause warping — enclose ABS/ASA/PC."]
+  },
+  {
+    id: "calibration", cat: "start", title: "Calibration: Temp, Retraction & Flow", emoji: "🎯",
+    summary: "Three quick tests that fix 80% of print quality problems.",
+    steps: [
+      { h: "Temperature tower", b: "Print a tower that drops 5 °C every 10 mm. Inspect each band for stringing, bridging, and surface finish — pick the lowest temp that still looks good. Most slicers (OrcaSlicer, Bambu Studio) build this in." },
+      { h: "Retraction test", b: "Print pillars at varying retraction distances. Lowest distance with no stringing wins. Direct drive: 0.4–1.2 mm. Bowden: 3–6 mm." },
+      { h: "Flow / extrusion multiplier", b: "Print a 20 mm hollow cube (vase mode or 1 perimeter, 0 top/bottom). Measure all four walls with calipers — average reading ÷ expected wall width × current flow = new flow. Aim for 0.42 mm wall when set to 0.4 mm." },
+      { h: "Tolerance test", b: "Print a tolerance test (Maker's Muse XYZ Cube or similar) to learn YOUR printer's real clearances for press, sliding, and free fits." },
+      { h: "Save it as a profile", b: "Lock in your new values as a custom slicer profile per material. Don't trust factory defaults across different brand spools." }
+    ],
+    tips: [
+      "OrcaSlicer and Bambu Studio have these tests built into one menu — use them.",
+      "Re-calibrate flow whenever you switch filament brand, even if it's the same material.",
+      "Calipers are the single most useful 3D printing tool — get a digital pair."
+    ],
+    shopLinks: [
+      { label: "Digital calipers (150mm)", query: "digital calipers 150mm stainless steel" }
+    ]
   },
   {
     id: "supports", cat: "quality", title: "Supports & Overhangs", emoji: "🏗️",
@@ -348,6 +420,24 @@ DB.troubleshooting = [
     id: "topgaps", symptom: "Gaps / holes in top surface", emoji: "🕳️",
     causes: ["Too few top layers", "Low infill density", "Under-extrusion", "Fast top-layer speed"],
     fixes: ["Use 4–5 top layers", "Raise infill to ≥15–20%", "Enable ironing for smooth tops", "Slow top-solid-infill speed", "Check/raise flow"]
+  },
+  {
+    id: "spaghetti", symptom: "Print detached / spaghetti monster", emoji: "🍝",
+    causes: ["First layer didn't stick", "Print head knocked the part loose", "Filament jam mid-print", "Bed adhesion gave up partway through"],
+    fixes: ["Re-level and clean the plate with IPA", "Slow the first layer (20–30 mm/s) and raise bed temp 5 °C", "Add a brim — especially for tall/narrow parts", "Check Z-offset is squishing the first layer, not floating it", "Enable spaghetti detection in your firmware (Klipper, Bambu, Mainsail) if available"],
+    shopLinks: [
+      { label: "Build plate cleaner (IPA)", query: "isopropyl alcohol 99% 32oz" },
+      { label: "PEI build plate", query: "pei textured build plate 3d printer" }
+    ]
+  },
+  {
+    id: "zbanding", symptom: "Horizontal banding / Z-wobble", emoji: "〰️",
+    causes: ["Bent or worn Z lead screw", "Loose Z-axis coupler", "Inconsistent Z-offset", "Frame vibration"],
+    fixes: ["Inspect Z lead screw for bend — replace if not straight", "Tighten the Z-axis coupler grub screw", "Install an anti-backlash nut on the Z lead screw", "Enable Z-hop in the slicer (0.4 mm)", "Brace/secure the printer frame on a solid surface"],
+    shopLinks: [
+      { label: "T8 Z lead screw + nut", query: "t8 lead screw 300mm anti backlash nut" },
+      { label: "Flexible Z-axis coupler", query: "5mm 8mm flexible shaft coupler 3d printer" }
+    ]
   }
 ];
 
