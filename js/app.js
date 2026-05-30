@@ -82,11 +82,14 @@
     { id: "streak-3",           name: "3-Day Streak",     emoji: "🔥", desc: "3 days in a row" },
     { id: "streak-7",           name: "Week-Long Streak", emoji: "💥", desc: "7 days in a row" },
     { id: "level-5",            name: "Halfway Hero",     emoji: "⭐", desc: "Reach Level 5" },
-    { id: "master",             name: "Printora Master",  emoji: "👑", desc: "Reach Level 10" }
+    { id: "master",             name: "Printora Master",  emoji: "👑", desc: "Reach Level 10" },
+    { id: "level-15",           name: "Diamond Printer",  emoji: "💎", desc: "Reach Level 15" },
+    { id: "level-20",           name: "Legend Status",    emoji: "🌟", desc: "Reach Level 20" },
+    { id: "streak-30",          name: "Month of Mastery", emoji: "📅", desc: "Hit a 30-day streak" }
   ];
 
   function defaultProgress() {
-    return { xp: 0, visited: [], achievements: [], streakDays: 0, lastVisit: null, firstVisit: null };
+    return { xp: 0, visited: [], achievements: [], streakDays: 0, bestStreak: 0, lastVisit: null, firstVisit: null };
   }
   function loadProgress() {
     try {
@@ -98,6 +101,51 @@
     try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(PROGRESS)); } catch (e) {}
   }
   let PROGRESS = loadProgress();
+
+  function exportProgress() {
+    try {
+      const payload = Object.assign({ _printora: 1, _exportedAt: new Date().toISOString() }, PROGRESS);
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `printora-backup-${todayStr()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showAchievementToast({ emoji: "💾", name: "Progress saved" });
+    } catch (e) {
+      showAchievementToast({ emoji: "⚠️", name: "Export failed" });
+    }
+  }
+
+  function importProgress(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (typeof data !== "object" || data === null ||
+            typeof data.xp !== "number" ||
+            !Array.isArray(data.visited) ||
+            !Array.isArray(data.achievements)) {
+          showAchievementToast({ emoji: "⚠️", name: "Invalid backup file" });
+          return;
+        }
+        // merge (preserve any local progress newer than backup)
+        PROGRESS = Object.assign(defaultProgress(), data);
+        saveProgress();
+        refreshLevelPill();
+        refreshHomeProgressCard();
+        showAchievementToast({ emoji: "✅", name: `Restored — Lv ${level()}` });
+        go("achievements");
+      } catch (e) {
+        showAchievementToast({ emoji: "⚠️", name: "Couldn't read file" });
+      }
+    };
+    reader.readAsText(file);
+  }
 
   /* ----- theme (light = Game Boy slate, dark = charcoal LCD) ----- */
   const THEME_KEY = "printora-theme";
@@ -149,6 +197,7 @@
     }
     PROGRESS.lastVisit = today;
     if (PROGRESS.streakDays > before && before > 0) _streakUp = PROGRESS.streakDays;
+    if (PROGRESS.streakDays > (PROGRESS.bestStreak || 0)) PROGRESS.bestStreak = PROGRESS.streakDays;
     saveProgress();
   }
   function awardDailyVisit() { award("daily:" + todayStr(), XP_RULES.dailyVisit); }
@@ -202,8 +251,11 @@
     if (cnt("open:compat:") >= (DB.compat ? DB.compat.classes.length : 4)) unlock("compat-master");
     if (PROGRESS.streakDays >= 3) unlock("streak-3");
     if (PROGRESS.streakDays >= 7) unlock("streak-7");
+    if ((PROGRESS.bestStreak || PROGRESS.streakDays) >= 30) unlock("streak-30");
     if (level() >= 5)  unlock("level-5");
     if (level() >= 10) unlock("master");
+    if (level() >= 15) unlock("level-15");
+    if (level() >= 20) unlock("level-20");
   }
 
   function refreshLevelPill() {
@@ -225,6 +277,8 @@
     const lvl = level();
     const streak = PROGRESS.streakDays;
     if (hour >= 22 || hour < 6) return "sleep";
+    if (lvl >= 20) return "godmode";
+    if (lvl >= 15) return "legend";
     if (lvl >= 10) return "master";
     if (streak >= 7) return "fire";
     if (streak >= 3) return "happy";
@@ -234,6 +288,8 @@
   }
   function petName() {
     const lvl = level();
+    if (lvl >= 20) return "PRINT-GOD";
+    if (lvl >= 15) return "VOID-MASTER";
     if (lvl >= 10) return "PRINT-MASTER";
     if (lvl >= 5)  return "PRINTORA";
     if (PROGRESS.xp === 0) return "EGG";
@@ -241,12 +297,14 @@
   }
   function petLines(mood) {
     const lines = {
-      egg:    ["TAP A CARD!", "FEED ME XP!", "HATCH ME!"],
-      ok:     ["LET'S PRINT!", "HI FRIEND!", "MORE XP?"],
-      happy:  ["FEELING GOOD!", "GREAT JOB!", "KEEP IT UP!"],
-      fire:   ["ON FIRE!", "UNSTOPPABLE!", "STREAK MODE!"],
-      master: ["LEGEND!", "PRINT GOD!", "MAX LEVEL!"],
-      sleep:  ["ZZZ...", "SHHH...", "DREAMING..."]
+      egg:     ["TAP A CARD!", "FEED ME XP!", "HATCH ME!"],
+      ok:      ["LET'S PRINT!", "HI FRIEND!", "MORE XP?"],
+      happy:   ["FEELING GOOD!", "GREAT JOB!", "KEEP IT UP!"],
+      fire:    ["ON FIRE!", "UNSTOPPABLE!", "STREAK MODE!"],
+      master:  ["LEGEND!", "PRINT GOD!", "MAX LEVEL!"],
+      legend:  ["TRANSCENDED!", "VOID-FORGED!", "BEYOND MASTER!"],
+      godmode: ["GODMODE!", "REALITY BENDS!", "I AM PRINTING!"],
+      sleep:   ["ZZZ...", "SHHH...", "DREAMING..."]
     };
     const arr = lines[mood] || lines.ok;
     const day = Math.floor(Date.now() / 60000); // change every minute
@@ -291,19 +349,23 @@
     // body colors stay vivid (pet sits on dim LCD bg so it pops either way),
     // but we soften them slightly in light mode to harmonize with the slate shell
     const map = isDark ? {
-      egg:    ["#e8d4a8", "#a88a54", eye],
-      ok:     ["#ffb05c", "#a06028", eye],
-      happy:  ["#e89bb0", "#a04a64", eye],
-      fire:   ["#ff5a3a", "#9a2010", "#fff3a0"],
-      master: ["#ffd28a", "#8a6018", eye],
-      sleep:  ["#7bd0c0", "#2a4870", eye]
+      egg:     ["#e8d4a8", "#a88a54", eye],
+      ok:      ["#ffb05c", "#a06028", eye],
+      happy:   ["#e89bb0", "#a04a64", eye],
+      fire:    ["#ff5a3a", "#9a2010", "#fff3a0"],
+      master:  ["#ffd28a", "#8a6018", eye],
+      legend:  ["#9bd0f0", "#3a6a90", "#fff3a0"],
+      godmode: ["#f0e0ff", "#6a30a0", "#fff3a0"],
+      sleep:   ["#7bd0c0", "#2a4870", eye]
     } : {
-      egg:    ["#e8d4a8", "#a88a54", eye],
-      ok:     ["#d97a5b", "#8a3a20", eye],
-      happy:  ["#c97a8f", "#7a3a48", eye],
-      fire:   ["#c84a30", "#6a1a08", "#fff3a0"],
-      master: ["#c69050", "#6a4010", eye],
-      sleep:  ["#5b9aa8", "#2a4870", eye]
+      egg:     ["#e8d4a8", "#a88a54", eye],
+      ok:      ["#d97a5b", "#8a3a20", eye],
+      happy:   ["#c97a8f", "#7a3a48", eye],
+      fire:    ["#c84a30", "#6a1a08", "#fff3a0"],
+      master:  ["#c69050", "#6a4010", eye],
+      legend:  ["#6a90c0", "#2a4a70", "#fff3a0"],
+      godmode: ["#a070d0", "#4a2a70", "#fff3a0"],
+      sleep:   ["#5b9aa8", "#2a4870", eye]
     };
     return map[mood] || map.ok;
   }
@@ -544,10 +606,13 @@
     );
     root.add(filament);
 
-    // CROWN — master mood (sits on top crossbar)
-    if (mood === "master") {
+    // CROWN — master / legend / godmode
+    if (mood === "master" || mood === "legend" || mood === "godmode") {
+      const crownColor = mood === "legend" ? 0x9bd0f0 : (mood === "godmode" ? 0xf0c8ff : 0xffd24a);
       const crownMat = new T.MeshStandardMaterial({
-        color: 0xffd24a, roughness: 0.2, metalness: 0.8
+        color: crownColor, roughness: 0.2, metalness: 0.8,
+        emissive: mood === "godmode" ? 0x9b4af0 : 0x000000,
+        emissiveIntensity: mood === "godmode" ? 0.5 : 0
       });
       const cbase = new T.Mesh(new T.CylinderGeometry(0.3, 0.3, 0.1, 16), crownMat);
       cbase.position.set(0, 1.42, -0.3);
@@ -558,9 +623,21 @@
         spike.position.set(Math.cos(a) * 0.22, 1.55, -0.3 + Math.sin(a) * 0.22);
         root.add(spike);
       }
+      // DOUBLE CROWN — legend & godmode
+      if (mood === "legend" || mood === "godmode") {
+        const cbase2 = new T.Mesh(new T.CylinderGeometry(0.22, 0.22, 0.08, 16), crownMat);
+        cbase2.position.set(0, 1.66, -0.3);
+        root.add(cbase2);
+        for (let i = 0; i < 5; i++) {
+          const spike = new T.Mesh(new T.ConeGeometry(0.05, 0.15, 8), crownMat);
+          const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
+          spike.position.set(Math.cos(a) * 0.16, 1.77, -0.3 + Math.sin(a) * 0.16);
+          root.add(spike);
+        }
+      }
     }
 
-    // FLAMES — fire mood (rising off the hotend)
+    // FLAMES — fire mood (around hotend) + godmode halo around top crossbar
     if (mood === "fire") {
       const flameMat = new T.MeshStandardMaterial({
         color: 0xffa040, emissive: 0xff5500, emissiveIntensity: 0.7,
@@ -573,6 +650,21 @@
         f.userData.flame = true;
         f.userData.offset = i * 0.4;
         headGroup.add(f);
+      }
+    }
+    if (mood === "godmode") {
+      // halo of bright flames around the top crossbar
+      const haloMat = new T.MeshStandardMaterial({
+        color: 0xc080ff, emissive: 0xa040ff, emissiveIntensity: 0.9,
+        transparent: true, opacity: 0.85
+      });
+      for (let i = 0; i < 8; i++) {
+        const f = new T.Mesh(new T.ConeGeometry(0.08, 0.28, 8), haloMat);
+        const a = (i / 8) * Math.PI * 2;
+        f.position.set(Math.cos(a) * 0.45, 1.95, -0.3 + Math.sin(a) * 0.45);
+        f.userData.flame = true;
+        f.userData.offset = i * 0.5;
+        root.add(f);
       }
     }
 
@@ -710,7 +802,7 @@
       eyes = `<path d="M 32 50 Q 36 53 40 50" stroke="${eye}" stroke-width="2" fill="none"/>
               <path d="M 56 50 Q 60 53 64 50" stroke="${eye}" stroke-width="2" fill="none"/>`;
       mouth = `<rect x="44" y="58" width="8" height="2" fill="${eye}"/>`;
-    } else if (mood === "happy" || mood === "fire" || mood === "master") {
+    } else if (mood === "happy" || mood === "fire" || mood === "master" || mood === "legend" || mood === "godmode") {
       eyes = `<rect x="32" y="46" width="6" height="8" fill="${eye}"/>
               <rect x="58" y="46" width="6" height="8" fill="${eye}"/>`;
       mouth = `<path d="M 38 58 Q 48 64 58 58" stroke="${eye}" stroke-width="2.5" fill="none"/>`;
@@ -719,13 +811,24 @@
               <rect x="59" y="46" width="5" height="6" fill="${eye}"/>`;
       mouth = `<rect x="42" y="58" width="12" height="2" fill="${eye}"/>`;
     }
-    const crown = mood === "master"
-      ? `<rect x="40" y="6" width="16" height="4" fill="#ffd24a"/>
-         <polygon points="40,6 44,2 48,6" fill="#ffd24a"/>
-         <polygon points="44,6 48,2 52,6" fill="#ffd24a"/>
-         <polygon points="48,6 52,2 56,6" fill="#ffd24a"/>`
+    const crownC = mood === "godmode" ? "#c080ff" : (mood === "legend" ? "#9bd0f0" : "#ffd24a");
+    const showCrown = mood === "master" || mood === "legend" || mood === "godmode";
+    const showStack = mood === "legend" || mood === "godmode";
+    const crown = showCrown
+      ? `<rect x="40" y="6" width="16" height="4" fill="${crownC}"/>
+         <polygon points="40,6 44,2 48,6" fill="${crownC}"/>
+         <polygon points="44,6 48,2 52,6" fill="${crownC}"/>
+         <polygon points="48,6 52,2 56,6" fill="${crownC}"/>
+         ${showStack ? `<rect x="42" y="0" width="12" height="2" fill="${crownC}"/>
+         <polygon points="42,0 45,-3 48,0" fill="${crownC}"/>
+         <polygon points="48,0 51,-3 54,0" fill="${crownC}"/>` : ""}`
+      : "";
+    const halo = mood === "godmode"
+      ? `<circle cx="48" cy="48" r="44" fill="none" stroke="#c080ff" stroke-width="2" opacity=".5"/>
+         <circle cx="48" cy="48" r="40" fill="none" stroke="#c080ff" stroke-width="1.5" opacity=".7"/>`
       : "";
     return `<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+      ${halo}
       ${crown}
       <!-- spool -->
       <circle cx="48" cy="14" r="8" fill="${body}"/>
@@ -754,10 +857,10 @@
   function renderPetInto(host) {
     const mood = petMood();
     const moodClass = (mood === "sleep") ? "mood-sleep"
-                    : (mood === "fire" || mood === "master") ? "mood-celebrate"
+                    : (mood === "fire" || mood === "master" || mood === "legend" || mood === "godmode") ? "mood-celebrate"
                     : (mood === "happy") ? "mood-happy" : "";
     const moodLabel = ({
-      egg: "Egg", ok: "Idle", happy: "Happy",
+      egg: "Egg", ok: "Idle", happy: "Happy", legend: "Legend", godmode: "Godmode",
       fire: "On Fire", master: "Legendary", sleep: "Sleeping"
     })[mood] || "Idle";
     const xp = PROGRESS.xp, lvl = level(), inLvl = xpInLevel();
@@ -784,6 +887,7 @@
           <span class="pet-stat"><span class="ps-ico">⭐</span>Lv ${lvl}</span>
           <span class="pet-stat"><span class="ps-ico">⚡</span>${xp} XP</span>
           <span class="pet-stat"><span class="ps-ico">🔥</span>${PROGRESS.streakDays}d</span>
+          <span class="pet-stat"><span class="ps-ico">🏆</span>${PROGRESS.bestStreak || PROGRESS.streakDays}d best</span>
         </div>
         <div class="pet-bar">${segs}</div>
         <div class="pet-bar-label">Energy · ${inLvl}/100 to Lv ${lvl + 1}</div>
@@ -916,7 +1020,12 @@
   let _streakUp = 0;
 
   async function shareApp() {
-    const shareData = {
+    const personal = PROGRESS.xp > 0;
+    const shareData = personal ? {
+      title: `I'm ${petName()} on Printora`,
+      text: `Lv ${level()} · ${PROGRESS.xp} XP · ${PROGRESS.streakDays}-day streak 🔥 — 3D printing companion app`,
+      url: location.origin + location.pathname.replace(/\/[^/]*$/, "/")
+    } : {
       title: "Printora",
       text: "Printora — your one-stop 3D printing app: setups, guides, models & shop.",
       url: location.origin + location.pathname.replace(/\/[^/]*$/, "/")
@@ -927,8 +1036,8 @@
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
-        await navigator.clipboard.writeText(shareData.url);
-        showAchievementToast({ emoji: "🔗", name: "Link copied!" });
+        await navigator.clipboard.writeText(shareData.text + " " + shareData.url);
+        showAchievementToast({ emoji: "🔗", name: "Copied to clipboard!" });
         return;
       } catch (e) {}
     }
@@ -1184,7 +1293,21 @@
       }));
       view.append(accordion(items));
     });
+    wireShopChips(view);
   };
+
+  function shopChips(items) {
+    if (!items || !items.length) return "";
+    const chips = items.map((s) =>
+      `<a class="shop-chip" href="${esc(amazonLink(s.query))}" target="_blank" rel="noopener noreferrer" data-shop-label="${esc(s.label)}">🛒 ${esc(s.label)}</a>`
+    ).join("");
+    return `<h4>🛒 You'll need</h4><div class="shop-chips">${chips}</div>`;
+  }
+  function wireShopChips(host) {
+    host.querySelectorAll(".shop-chip").forEach((a) => {
+      a.addEventListener("click", () => trackClick("shop", a.dataset.shopLabel || "chip"));
+    });
+  }
 
   function guideBody(g) {
     let out = '<ol class="steps">';
@@ -1194,6 +1317,7 @@
       out += '<div class="note"><b>💡 Pro tips</b><ul>' +
         g.tips.map((t) => `<li>${esc(t)}</li>`).join("") + "</ul></div>";
     }
+    out += shopChips(g.shopLinks);
     return out;
   }
 
@@ -1203,9 +1327,11 @@
       kind: "fix", id: t.id,
       head: `<span class="acc-emoji">${t.emoji}</span><span class="acc-title"><b>${esc(t.symptom)}</b></span>`,
       body: `<h4>Likely causes</h4><ul>${t.causes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
-             <h4>✅ Fixes (try in order)</h4><ol class="fixes">${t.fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ol>`
+             <h4>✅ Fixes (try in order)</h4><ol class="fixes">${t.fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ol>
+             ${shopChips(t.shopLinks)}`
     }));
     view.append(accordion(items));
+    wireShopChips(view);
   };
 
   routes.glossary = function () {
@@ -1246,9 +1372,16 @@
   };
 
   routes.calc = function () {
-    view.innerHTML = section("Filament Cost Calculator", "Estimate the material cost of a print");
-    const form = el("div", "calc");
-    form.innerHTML = `
+    view.innerHTML = section("Calculators", "Material cost and volumetric flow rate");
+    const tabs = el("div", "calc-tabs");
+    tabs.innerHTML = `
+      <button type="button" class="calc-tab active" data-tab="cost">💰 Cost</button>
+      <button type="button" class="calc-tab" data-tab="flow">⚡ Flow rate</button>`;
+    view.append(tabs);
+
+    const costForm = el("div", "calc");
+    costForm.dataset.tab = "cost";
+    costForm.innerHTML = `
       <label>Filament used (grams)
         <input id="c-g" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 42" />
       </label>
@@ -1259,10 +1392,36 @@
         <input id="c-spool" type="number" inputmode="decimal" min="1" step="1" value="1000" />
       </label>
       <div class="calc-out" id="c-out">Enter values to see the cost.</div>
-      <p class="foot-note">Most slicers report grams used after slicing. Add electricity/wear separately if you sell prints.</p>
-    `;
-    view.append(form);
-    const recalc = () => {
+      <p class="foot-note">Most slicers report grams used after slicing. Add electricity/wear separately if you sell prints.</p>`;
+    view.append(costForm);
+
+    const flowForm = el("div", "calc");
+    flowForm.dataset.tab = "flow";
+    flowForm.style.display = "none";
+    flowForm.innerHTML = `
+      <label>Layer height (mm)
+        <input id="f-lh" type="number" inputmode="decimal" min="0.04" max="1" step="0.01" value="0.2" />
+      </label>
+      <label>Line width (mm)
+        <input id="f-lw" type="number" inputmode="decimal" min="0.2" max="2" step="0.01" value="0.4" />
+      </label>
+      <label>Print speed (mm/s)
+        <input id="f-sp" type="number" inputmode="decimal" min="10" max="800" step="1" value="120" />
+      </label>
+      <div class="calc-out" id="f-out">Enter values to see the flow rate.</div>
+      <p class="foot-note">Flow = layer × width × speed. Stock hotends max around 12 mm³/s on PLA. High-flow hotends (CHT, Volcano, Bambu) push 20–30+.</p>`;
+    view.append(flowForm);
+
+    tabs.querySelectorAll(".calc-tab").forEach((b) => {
+      b.addEventListener("click", () => {
+        tabs.querySelectorAll(".calc-tab").forEach((x) => x.classList.toggle("active", x === b));
+        const which = b.dataset.tab;
+        costForm.style.display = which === "cost" ? "" : "none";
+        flowForm.style.display = which === "flow" ? "" : "none";
+      });
+    });
+
+    const recalcCost = () => {
       const g = parseFloat($("#c-g").value);
       const price = parseFloat($("#c-price").value);
       const spool = parseFloat($("#c-spool").value) || 1000;
@@ -1274,7 +1433,27 @@
       out.innerHTML = `<span class="big">${fmtMoney(cost)}</span>
         <small>${g} g × ${fmtMoney(perKg)}/kg</small>`;
     };
-    ["c-g", "c-price", "c-spool"].forEach((id) => $("#" + id).addEventListener("input", recalc));
+    ["c-g", "c-price", "c-spool"].forEach((id) => $("#" + id).addEventListener("input", recalcCost));
+
+    const recalcFlow = () => {
+      const lh = parseFloat($("#f-lh").value);
+      const lw = parseFloat($("#f-lw").value);
+      const sp = parseFloat($("#f-sp").value);
+      const out = $("#f-out");
+      if (!(lh > 0) || !(lw > 0) || !(sp > 0)) { out.textContent = "Enter values to see the flow rate."; return; }
+      const flow = lh * lw * sp;
+      let verdict, color, advice = "";
+      if (flow <= 12) { verdict = "Safe for any hotend"; color = "ok"; }
+      else if (flow <= 20) { verdict = "Needs a high-flow hotend"; color = "mid"; advice = "Look for CHT, Volcano, or Bambu-spec hotends."; }
+      else { verdict = "Will under-extrude on stock hardware"; color = "hard"; advice = "Slow down, use a larger nozzle, or upgrade to a high-flow hotend."; }
+      award("calc:used", XP_RULES.calc);
+      out.innerHTML = `<span class="big">${flow.toFixed(2)} mm³/s</span>
+        <small class="flow-verdict v-${color}">${esc(verdict)}</small>
+        ${advice ? `<p class="flow-advice">${esc(advice)}</p>` : ""}
+        ${color === "hard" ? `<a href="#shop" class="step-link">Browse high-flow nozzles →</a>` : ""}`;
+    };
+    ["f-lh", "f-lw", "f-sp"].forEach((id) => $("#" + id).addEventListener("input", recalcFlow));
+    recalcFlow();
   };
 
   function fmtMoney(n) {
@@ -1388,9 +1567,28 @@
     stats.innerHTML = `
       <div class="ach-stat"><b>${level()}</b><span>Level</span></div>
       <div class="ach-stat"><b>${PROGRESS.xp}</b><span>Total XP</span></div>
-      <div class="ach-stat"><b>${PROGRESS.streakDays}</b><span>Day Streak</span></div>
-      <div class="ach-stat"><b>${unlocked}/${ACHIEVEMENTS.length}</b><span>Achievements</span></div>`;
+      <div class="ach-stat"><b>${PROGRESS.streakDays}</b><span>Streak</span></div>
+      <div class="ach-stat"><b>${PROGRESS.bestStreak || PROGRESS.streakDays}</b><span>Best Streak</span></div>
+      <div class="ach-stat"><b>${unlocked}/${ACHIEVEMENTS.length}</b><span>Badges</span></div>`;
     view.append(stats);
+
+    const tools = el("div", "ach-tools");
+    tools.innerHTML = `
+      <button class="ach-tool-btn" type="button" data-act="share">📣 Share my progress</button>
+      <button class="ach-tool-btn" type="button" data-act="export">⬇ Export backup</button>
+      <button class="ach-tool-btn" type="button" data-act="import">⬆ Import backup</button>
+      <input type="file" id="ach-file" accept="application/json,.json" hidden />`;
+    view.append(tools);
+    tools.querySelector('[data-act="share"]').addEventListener("click", shareApp);
+    tools.querySelector('[data-act="export"]').addEventListener("click", exportProgress);
+    tools.querySelector('[data-act="import"]').addEventListener("click", () => {
+      tools.querySelector("#ach-file").click();
+    });
+    tools.querySelector("#ach-file").addEventListener("change", (e) => {
+      importProgress(e.target.files && e.target.files[0]);
+      e.target.value = "";
+    });
+
     const grid = el("div", "ach-grid");
     ACHIEVEMENTS.forEach((a) => {
       const got = PROGRESS.achievements.indexOf(a.id) !== -1;
@@ -1453,6 +1651,12 @@
       text: [it.name, it.query, cat.name].join(" ").toLowerCase(),
       go: "shop"
     })));
+    [
+      { type: "Tool", icon: "💰", title: "Cost calculator", sub: "Estimate filament cost per print",
+        text: "cost calculator filament price spool grams material expense", go: "calc" },
+      { type: "Tool", icon: "⚡", title: "Volumetric flow rate calculator", sub: "Layer × width × speed → mm³/s",
+        text: "volumetric flow rate mm3 s hotend high flow extrusion limit speed under-extrusion", go: "calc" }
+    ].forEach((e) => INDEX.push(e));
     return INDEX;
   }
 
