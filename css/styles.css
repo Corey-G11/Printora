@@ -117,6 +117,15 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible, a:focus-visible {
+  outline-offset: 3px;
+}
 html, body { margin: 0; padding: 0; }
 body {
   background: var(--shell-1);
@@ -471,15 +480,15 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 
 /* D-pad style action buttons under the pet */
 .pet-actions {
-  display: flex; gap: 8px; justify-content: center;
-  margin-top: 14px;
+  display: flex; gap: 12px; justify-content: center;
+  margin-top: 14px; margin-bottom: 4px;
 }
 .pet-btn {
   background: var(--shell-0);
   border: 3px solid var(--shell-3);
-  border-radius: 50%;
-  width: 48px; height: 48px;
-  display: grid; place-items: center;
+  border-radius: 14px;
+  width: 60px; padding: 8px 4px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
   font-size: 18px;
   color: var(--shell-3);
   box-shadow: 0 3px 0 var(--shell-3);
@@ -491,7 +500,6 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .pet-btn span {
   font-size: 9px; font-weight: 900; letter-spacing: .8px;
-  position: absolute; bottom: -16px;
   color: var(--shell-3);
   text-transform: uppercase;
 }
@@ -1067,6 +1075,58 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   color: var(--lcd-pix); font-weight: 700;
   position: relative; z-index: 1;
 }
+.tip-claim {
+  margin-top: 10px; position: relative; z-index: 1;
+  background: var(--orange); color: var(--shell-3);
+  border: 2.5px solid var(--lcd-pix);
+  border-radius: 4px;
+  padding: 6px 12px; font-size: 11px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .8px;
+  cursor: pointer; font-family: var(--pixel-font);
+  box-shadow: 2px 2px 0 var(--shell-3);
+  transition: transform .08s var(--ease);
+}
+.tip-claim:active:not(.claimed) { transform: translate(2px, 2px); box-shadow: none; }
+.tip-claim.claimed {
+  background: var(--lcd-pix); color: var(--lcd-0);
+  cursor: default; box-shadow: none;
+}
+
+/* daily challenge card inside the pet screen */
+.pet-challenge {
+  margin: 12px 0 4px;
+  background: rgba(0, 0, 0, .06);
+  border: 2px dashed var(--lcd-pix);
+  border-radius: 6px;
+  padding: 10px 12px;
+  position: relative; z-index: 1;
+  text-align: center;
+}
+.pet-challenge.done { opacity: .6; }
+.pc-label {
+  font-size: 9.5px; font-weight: 900; letter-spacing: 1.5px;
+  color: var(--lcd-pix); text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.pc-text {
+  font-size: 11.5px; font-weight: 700; line-height: 1.4;
+  color: var(--lcd-pix);
+  margin-bottom: 8px;
+}
+.pc-claim {
+  background: var(--orange); color: var(--shell-3);
+  border: 2.5px solid var(--lcd-pix);
+  border-radius: 4px;
+  padding: 5px 11px; font-size: 10px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .8px;
+  cursor: pointer; font-family: var(--pixel-font);
+  box-shadow: 2px 2px 0 var(--shell-3);
+}
+.pc-claim:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
+.pc-claim:disabled {
+  background: var(--lcd-pix); color: var(--lcd-0);
+  cursor: default; box-shadow: none;
+}
 
 .install-banner {
   position: fixed; left: 10px; right: 10px;
@@ -1088,6 +1148,17 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 .install-banner .ib-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .install-banner .ib-txt b { font-size: 12px; color: var(--lcd-pix); font-weight: 900; text-transform: uppercase; letter-spacing: .5px; }
 .install-banner .ib-txt small { font-size: 11px; color: var(--lcd-pix); font-weight: 700; }
+.install-banner .ib-cta {
+  background: var(--orange); color: var(--shell-3);
+  border: 2.5px solid var(--lcd-pix);
+  border-radius: 5px;
+  padding: 6px 12px; font-size: 11px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .8px;
+  cursor: pointer; font-family: var(--pixel-font);
+  box-shadow: 2px 2px 0 var(--shell-3);
+  margin-right: 4px;
+}
+.install-banner .ib-cta:active { transform: translate(2px, 2px); box-shadow: none; }
 .install-banner .ib-x {
   background: var(--shell-0); color: var(--shell-3);
   border: 2.5px solid var(--shell-3);
@@ -1102,7 +1173,10 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 /* ---------- accessibility ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .acc-body { transition: none; }
   .install-banner { transition: none; }
   .pet { animation: none !important; }
+  /* accordion uses grid-rows transition — without it the body never visually
+     opens. Force the rows immediately so content is still reachable. */
+  .acc-body { grid-template-rows: 1fr !important; }
+  .acc-item:not(.open) .acc-body { grid-template-rows: 0fr !important; }
 }

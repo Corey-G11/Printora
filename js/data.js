@@ -408,6 +408,30 @@ DB.tips = [
   "Keep filament in vacuum bags with rechargeable silica. Reduces stringing AND extends print quality on every spool."
 ];
 
+/* ---------- DAILY CHALLENGES — rotated by day-of-year ---------- */
+DB.challenges = [
+  { emoji: "⛵", text: "Print a Benchy and time it — your baseline for every tune from here on." },
+  { emoji: "🌡️", text: "Run a temp tower on your current filament. Lock in the lowest temp that still bonds." },
+  { emoji: "🧵", text: "Run a retraction tower. Stringing is the #1 print-quality killer." },
+  { emoji: "📏", text: "Print a 20mm calibration cube and measure with calipers. Adjust steps/mm if off." },
+  { emoji: "🌳", text: "Try tree supports on something with an overhang — way easier to remove." },
+  { emoji: "🧊", text: "Slice the same model with 3 different infill patterns. Pick the strongest you'll use." },
+  { emoji: "🎨", text: "Try a 2-color print (manual filament swap mid-print). The simplest upgrade you can make." },
+  { emoji: "🔁", text: "Print a useful tool for your printer (filament guide, fan duct, drawer)." },
+  { emoji: "🧽", text: "Do a cold pull tonight. Resolves 80% of mystery extrusion issues." },
+  { emoji: "🪛", text: "Tighten one belt and re-check belt tension on all axes. Quietest fix for ringing." },
+  { emoji: "🧪", text: "Try one new filament brand this week. Note the temp & flow that worked." },
+  { emoji: "🧩", text: "Design or print a snap-fit joint. Real engineering skill, instant payoff." },
+  { emoji: "🏗️", text: "Try vase mode (spiralize) on a single-wall cup or planter." },
+  { emoji: "📐", text: "Calibrate your e-steps with the 100mm extrusion test." },
+  { emoji: "🌀", text: "Try a different layer height (0.12 or 0.28) and compare quality vs. time." },
+  { emoji: "🪞", text: "Print a small Voron Cube or Klipper logo — earn your bragging rights." },
+  { emoji: "🔥", text: "Run a flow calibration cube. Top-layer perfection starts here." },
+  { emoji: "📷", text: "Photograph one finished print well-lit. Build the portfolio." },
+  { emoji: "💡", text: "Lube your Z lead-screw with PTFE. Quieter, smoother, longer-lived." },
+  { emoji: "🎁", text: "Print someone a gift. The best feedback loop in 3D printing." }
+];
+
 
 /* ---------- BEGINNER HUB ---------- */
 DB.beginnerSteps = [
