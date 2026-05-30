@@ -68,7 +68,8 @@
     calc:       20,
     dailyVisit: 10,
     tipGotIt:   5,
-    challenge:  25
+    challenge:  25,
+    pet:        { feed: 10, play: 5, clean: 3, train: 5, pat: 1 }
   };
   const ACHIEVEMENTS = [
     { id: "welcome",            name: "Welcome Aboard",   emoji: "🚀", desc: "Open Printora for the first time" },
@@ -85,11 +86,13 @@
     { id: "master",             name: "Printora Master",  emoji: "👑", desc: "Reach Level 10" },
     { id: "level-15",           name: "Diamond Printer",  emoji: "💎", desc: "Reach Level 15" },
     { id: "level-20",           name: "Legend Status",    emoji: "🌟", desc: "Reach Level 20" },
-    { id: "streak-30",          name: "Month of Mastery", emoji: "📅", desc: "Hit a 30-day streak" }
+    { id: "streak-30",          name: "Month of Mastery", emoji: "📅", desc: "Hit a 30-day streak" },
+    { id: "pet-parent",         name: "Pet Parent",       emoji: "🤗", desc: "Feed, play, clean & train in one day" },
+    { id: "pet-affection",      name: "Best Friend",      emoji: "💖", desc: "Headpat your pet 7 different days" }
   ];
 
   function defaultProgress() {
-    return { xp: 0, visited: [], achievements: [], streakDays: 0, bestStreak: 0, lastVisit: null, firstVisit: null, firstVisitSeen: false };
+    return { xp: 0, visited: [], achievements: [], streakDays: 0, bestStreak: 0, lastVisit: null, firstVisit: null, firstVisitSeen: false, petActions: {} };
   }
   function loadProgress() {
     try {
@@ -201,6 +204,27 @@
     saveProgress();
   }
   function awardDailyVisit() { award("daily:" + todayStr(), XP_RULES.dailyVisit); }
+
+  function petActionDoneToday(action) {
+    const today = todayStr();
+    return (PROGRESS.petActions || {})[action] === today;
+  }
+  function recordPetAction(action) {
+    if (!PROGRESS.petActions) PROGRESS.petActions = {};
+    const today = todayStr();
+    if (PROGRESS.petActions[action] === today) return 0;
+    PROGRESS.petActions[action] = today;
+    if (action === "pat") {
+      if (!Array.isArray(PROGRESS.patDays)) PROGRESS.patDays = [];
+      if (PROGRESS.patDays.indexOf(today) === -1) PROGRESS.patDays.push(today);
+    }
+    const xp = (XP_RULES.pet && XP_RULES.pet[action]) || 0;
+    PROGRESS.xp += xp;
+    saveProgress();
+    checkAchievements();
+    refreshLevelPill();
+    return xp;
+  }
   function todayChallenge() {
     if (!DB.challenges || !DB.challenges.length) return null;
     const day = Math.floor(Date.parse(todayStr()) / 86400000);
@@ -259,6 +283,14 @@
     if (level() >= 10) unlock("master");
     if (level() >= 15) unlock("level-15");
     if (level() >= 20) unlock("level-20");
+    // pet-parent: all four care actions used on the same day
+    const today = todayStr();
+    const acts = PROGRESS.petActions || {};
+    if (acts.feed === today && acts.play === today && acts.clean === today && acts.train === today) {
+      unlock("pet-parent");
+    }
+    // pet-affection: tracked separately via patDays array (unique-day count)
+    if ((PROGRESS.patDays || []).length >= 7) unlock("pet-affection");
   }
 
   function refreshLevelPill() {
@@ -907,26 +939,60 @@
           </div>`;
         })()}
         <div class="pet-actions">
-          <button class="pet-btn" type="button" data-act="feed"  aria-label="Feed — open Guides">🍔<span>Feed</span></button>
-          <button class="pet-btn" type="button" data-act="play"  aria-label="Play — open Models">🎮<span>Play</span></button>
-          <button class="pet-btn" type="button" data-act="clean" aria-label="Clean — open Troubleshoot">🧽<span>Clean</span></button>
-          <button class="pet-btn" type="button" data-act="train" aria-label="Train — open Setups">💪<span>Train</span></button>
+          ${["feed", "play", "clean", "train"].map((a) => {
+            const meta = { feed: ["🍔", "Feed", "Guides"], play: ["🎮", "Play", "Models"], clean: ["🧽", "Clean", "Troubleshoot"], train: ["💪", "Train", "Setups"] }[a];
+            const done = petActionDoneToday(a);
+            const reward = (XP_RULES.pet && XP_RULES.pet[a]) || 0;
+            return `<button class="pet-btn${done ? " done" : ""}" type="button"
+              data-act="${a}"
+              aria-label="${meta[1]} (${done ? "done today" : `+${reward} XP`}) — open ${meta[2]}">
+              ${meta[0]}<span>${meta[1]}</span>
+              <small class="pet-btn-reward">${done ? "✓" : "+" + reward}</small>
+            </button>`;
+          }).join("")}
         </div>
       </div>`;
     host.querySelectorAll(".pet-btn").forEach((b) => {
       b.addEventListener("click", () => {
+        const act = b.dataset.act;
         const map = { feed: "guides", play: "models", clean: "fix", train: "setups" };
-        const dest = map[b.dataset.act] || "home";
-        // little squish animation via class
+        const dest = map[act] || "home";
         const petEl = host.querySelector(".pet");
-        if (petEl) {
-          petEl.style.transform = "scale(1.15)";
-          setTimeout(() => { petEl.style.transform = ""; }, 180);
+        const xp = recordPetAction(act);
+        if (xp > 0) {
+          floatPetXp(host, "+" + xp + " XP");
+          b.classList.add("done");
+          const rew = b.querySelector(".pet-btn-reward");
+          if (rew) rew.textContent = "✓";
         }
-        if (navigator.vibrate) try { navigator.vibrate(10); } catch (e) {}
-        go(dest);
+        if (petEl) {
+          const animClass = "pet-anim-" + act;
+          petEl.classList.add(animClass);
+          setTimeout(() => petEl.classList.remove(animClass), 700);
+        }
+        if (navigator.vibrate) try { navigator.vibrate(xp > 0 ? 14 : 8); } catch (e) {}
+        setTimeout(() => go(dest), 750);
       });
     });
+
+    // tap the pet itself = headpat
+    const petEl = host.querySelector(".pet");
+    if (petEl) {
+      petEl.addEventListener("click", (e) => {
+        // ignore taps that bubbled up from action buttons (handled above)
+        if (e.target.closest(".pet-btn")) return;
+        const xp = recordPetAction("pat");
+        if (xp > 0) {
+          floatPetXp(host, "💖 +" + xp);
+        } else {
+          floatPetXp(host, "💖", "var(--pill-mid-bg)");
+        }
+        petEl.classList.add("pet-anim-pat");
+        setTimeout(() => petEl.classList.remove("pet-anim-pat"), 500);
+        if (navigator.vibrate) try { navigator.vibrate(xp > 0 ? 14 : 6); } catch (e2) {}
+      });
+      petEl.style.cursor = "pointer";
+    }
     const claimBtn = host.querySelector(".pc-claim");
     if (claimBtn && !claimBtn.disabled) {
       claimBtn.addEventListener("click", () => {
@@ -1101,6 +1167,17 @@
   }
 
   /* ----- confetti burst (used by welcome modal and achievement unlocks) ----- */
+  function floatPetXp(host, text, color) {
+    const stage = host.querySelector(".pet-stage");
+    if (!stage) return;
+    const f = document.createElement("div");
+    f.className = "pet-float-xp";
+    f.textContent = text;
+    if (color) f.style.color = color;
+    stage.appendChild(f);
+    setTimeout(() => f.remove(), 1200);
+  }
+
   function confettiBurst() {
     const layer = document.createElement("div");
     layer.className = "confetti-layer";
