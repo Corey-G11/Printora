@@ -89,7 +89,7 @@
   ];
 
   function defaultProgress() {
-    return { xp: 0, visited: [], achievements: [], streakDays: 0, bestStreak: 0, lastVisit: null, firstVisit: null };
+    return { xp: 0, visited: [], achievements: [], streakDays: 0, bestStreak: 0, lastVisit: null, firstVisit: null, firstVisitSeen: false };
   }
   function loadProgress() {
     try {
@@ -237,7 +237,10 @@
       PROGRESS.achievements.push(id);
       saveProgress();
       const def = ACHIEVEMENTS.find((a) => a.id === id);
-      if (def) showAchievementToast(def);
+      if (def) {
+        showAchievementToast(def);
+        if (id !== "welcome" && typeof confettiBurst === "function") confettiBurst();
+      }
     };
     const cnt = (prefix) => PROGRESS.visited.filter((v) => v.indexOf(prefix) === 0).length;
 
@@ -1044,6 +1047,80 @@
     showAchievementToast({ emoji: "🔗", name: shareData.url });
   }
 
+  function showWelcomeModal() {
+    if (document.querySelector(".welcome-modal")) return;
+    const slides = [
+      { emoji: "🤖", title: "Meet your Printling", body: "This little Game Boy printer lives on your home screen and grows with every print you complete. Hit Level 20 to unlock godmode." },
+      { emoji: "⚡", title: "Earn XP everywhere", body: "Opening setups, reading guides, fixing problems, daily visits — it all counts. Daily streaks unlock the rarest badges." },
+      { emoji: "🚀", title: "Start with the basics", body: "If you're new, the Beginner Hub walks you through your first print. Already printing? Jump into Materials, the Calculator, or the Shop." }
+    ];
+    let idx = 0;
+    const root = document.createElement("div");
+    root.className = "welcome-modal";
+    root.setAttribute("role", "dialog");
+    root.setAttribute("aria-modal", "true");
+    root.setAttribute("aria-label", "Welcome to Printora");
+    root.innerHTML = `<div class="welcome-card">
+      <div class="welcome-body"></div>
+      <div class="welcome-dots"></div>
+      <div class="welcome-actions">
+        <button type="button" class="welcome-skip">Skip</button>
+        <button type="button" class="welcome-next">Next →</button>
+      </div>
+    </div>`;
+    const bodyEl = root.querySelector(".welcome-body");
+    const dotsEl = root.querySelector(".welcome-dots");
+    const nextBtn = root.querySelector(".welcome-next");
+    const skipBtn = root.querySelector(".welcome-skip");
+    function render() {
+      const s = slides[idx];
+      bodyEl.innerHTML = `<div class="welcome-emoji">${s.emoji}</div>
+        <h2 class="welcome-title">${esc(s.title)}</h2>
+        <p class="welcome-text">${esc(s.body)}</p>`;
+      dotsEl.innerHTML = slides.map((_, i) =>
+        `<span class="welcome-dot${i === idx ? " active" : ""}"></span>`
+      ).join("");
+      nextBtn.textContent = (idx === slides.length - 1) ? "Let's go! 🎉" : "Next →";
+    }
+    function dismiss() {
+      root.classList.add("closing");
+      setTimeout(() => root.remove(), 220);
+      PROGRESS.firstVisitSeen = true;
+      saveProgress();
+      // celebratory confetti on dismiss
+      confettiBurst();
+    }
+    nextBtn.addEventListener("click", () => {
+      if (idx < slides.length - 1) { idx++; render(); }
+      else dismiss();
+    });
+    skipBtn.addEventListener("click", dismiss);
+    root.addEventListener("click", (e) => { if (e.target === root) dismiss(); });
+    render();
+    document.body.appendChild(root);
+  }
+
+  /* ----- confetti burst (used by welcome modal and achievement unlocks) ----- */
+  function confettiBurst() {
+    const layer = document.createElement("div");
+    layer.className = "confetti-layer";
+    const colors = ["#ff5a3a", "#ffd24a", "#7bd0c0", "#c080ff", "#e89bb0", "#9bd0f0"];
+    const N = 24;
+    for (let i = 0; i < N; i++) {
+      const p = document.createElement("span");
+      p.className = "confetti-piece";
+      p.style.background = colors[i % colors.length];
+      p.style.left = (Math.random() * 100) + "%";
+      p.style.animationDelay = (Math.random() * 120) + "ms";
+      p.style.animationDuration = (900 + Math.random() * 700) + "ms";
+      p.style.setProperty("--drift", ((Math.random() - 0.5) * 240).toFixed(0) + "px");
+      p.style.setProperty("--spin",  Math.floor(Math.random() * 720 + 360) + "deg");
+      layer.appendChild(p);
+    }
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 1500);
+  }
+
   let _deferredInstallPrompt = null;
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
@@ -1708,7 +1785,7 @@
       });
     }
   }
-  window.Printora = { go, PROGRESS, ACHIEVEMENTS };
+  window.Printora = { go, PROGRESS, ACHIEVEMENTS, DB, checkAchievements };
 
   function buildTabBar() {
     const bar = $("#tabbar");
@@ -1739,7 +1816,11 @@
     go(r0, id0);
   }
   // welcome achievement fires on first ever launch
+  const isFirstLaunch = !PROGRESS.firstVisitSeen;
   checkAchievements();
+  if (isFirstLaunch) {
+    setTimeout(showWelcomeModal, 350);
+  }
   // streak-up celebration (only when it actually increments)
   if (_streakUp >= 2) {
     setTimeout(() => showAchievementToast({
