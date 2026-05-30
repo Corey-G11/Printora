@@ -37,6 +37,7 @@
     const wrap = el("div", "acc");
     items.forEach((it) => {
       const card = el("div", "acc-item" + (it.open ? " open" : ""));
+      if (it.id) card.dataset.id = it.id;
       const btn = el("button", "acc-head");
       btn.type = "button";
       btn.innerHTML = it.head + '<span class="chev" aria-hidden="true">▾</span>';
@@ -64,7 +65,10 @@
     routeVisit: { beginners: 100, tools: 10, compat: 15, shop: 5, glossary: 10, compare: 10 },
     open:       { setup: 15, guide: 20, fix: 15, models: 5, compat: 10 },
     click:      { tool: 10, shop: 5 },
-    calc:       20
+    calc:       20,
+    dailyVisit: 10,
+    tipGotIt:   5,
+    challenge:  25
   };
   const ACHIEVEMENTS = [
     { id: "welcome",            name: "Welcome Aboard",   emoji: "🚀", desc: "Open Printora for the first time" },
@@ -146,6 +150,18 @@
     PROGRESS.lastVisit = today;
     if (PROGRESS.streakDays > before && before > 0) _streakUp = PROGRESS.streakDays;
     saveProgress();
+  }
+  function awardDailyVisit() { award("daily:" + todayStr(), XP_RULES.dailyVisit); }
+  function todayChallenge() {
+    if (!DB.challenges || !DB.challenges.length) return null;
+    const day = Math.floor(Date.parse(todayStr()) / 86400000);
+    return DB.challenges[((day % DB.challenges.length) + DB.challenges.length) % DB.challenges.length];
+  }
+  function challengeDoneToday() {
+    return PROGRESS.visited.indexOf("challenge:" + todayStr()) !== -1;
+  }
+  function tipClaimedToday() {
+    return PROGRESS.visited.indexOf("tip:" + todayStr()) !== -1;
   }
   function level()      { return Math.floor(PROGRESS.xp / 100) + 1; }
   function xpInLevel()  { return PROGRESS.xp - (level() - 1) * 100; }
@@ -599,8 +615,8 @@
     const pet = buildPetMesh(mood);
     scene.add(pet);
 
-    // find named sub-parts to animate
-    const parts = { bed: null, head: null, spool: null };
+    // find named sub-parts to animate (cache once — avoid per-frame lookup)
+    const parts = { bed: null, head: null, spool: null, xrail: null };
     pet.traverse((o) => {
       const r = o.userData && o.userData.role;
       if (r && parts[r] === null) parts[r] = o;
@@ -633,8 +649,7 @@
           parts.head.position.x = Math.cos(t * 2.0 * speed) * 0.45;
         }
         // X-axis rail follows the head's Y
-        const xrail = pet.children.find((c) => c.userData && c.userData.role === "xrail");
-        if (xrail && parts.head) xrail.position.y = parts.head.position.y;
+        if (parts.xrail && parts.head) parts.xrail.position.y = parts.head.position.y;
         // SPOOL rotates lazily
         if (parts.spool) parts.spool.rotation.x = t * 0.5 * speed;
       }
@@ -772,11 +787,23 @@
         </div>
         <div class="pet-bar">${segs}</div>
         <div class="pet-bar-label">Energy · ${inLvl}/100 to Lv ${lvl + 1}</div>
+        ${(function () {
+          const ch = todayChallenge();
+          if (!ch) return "";
+          const done = challengeDoneToday();
+          return `<div class="pet-challenge ${done ? "done" : ""}">
+            <div class="pc-label">🎯 Today's Challenge</div>
+            <div class="pc-text">${ch.emoji} ${esc(ch.text)}</div>
+            <button class="pc-claim" type="button" ${done ? "disabled" : ""}>
+              ${done ? "✓ Done today" : `Mark done · +${XP_RULES.challenge} XP`}
+            </button>
+          </div>`;
+        })()}
         <div class="pet-actions">
-          <button class="pet-btn" type="button" data-act="feed"  aria-label="Feed (Guides)">🍔</button>
-          <button class="pet-btn" type="button" data-act="play"  aria-label="Play (Models)">🎮</button>
-          <button class="pet-btn" type="button" data-act="clean" aria-label="Clean (Fix)">🧽</button>
-          <button class="pet-btn" type="button" data-act="train" aria-label="Train (Setups)">💪</button>
+          <button class="pet-btn" type="button" data-act="feed"  aria-label="Feed — open Guides">🍔<span>Feed</span></button>
+          <button class="pet-btn" type="button" data-act="play"  aria-label="Play — open Models">🎮<span>Play</span></button>
+          <button class="pet-btn" type="button" data-act="clean" aria-label="Clean — open Troubleshoot">🧽<span>Clean</span></button>
+          <button class="pet-btn" type="button" data-act="train" aria-label="Train — open Setups">💪<span>Train</span></button>
         </div>
       </div>`;
     host.querySelectorAll(".pet-btn").forEach((b) => {
@@ -793,6 +820,15 @@
         go(dest);
       });
     });
+    const claimBtn = host.querySelector(".pc-claim");
+    if (claimBtn && !claimBtn.disabled) {
+      claimBtn.addEventListener("click", () => {
+        if (challengeDoneToday()) return;
+        award("challenge:" + todayStr(), XP_RULES.challenge);
+        // re-render the whole pet card so the speech/mood reacts
+        renderPetInto(host);
+      });
+    }
 
     // mount 3D pet (falls back to flat SVG if WebGL/three.js unavailable)
     const pet3d = host.querySelector("#pet3d");
@@ -899,6 +935,18 @@
     showAchievementToast({ emoji: "🔗", name: shareData.url });
   }
 
+  let _deferredInstallPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    _deferredInstallPrompt = e;
+    // re-render banner if it was already shown with the manual instructions
+    const existing = document.querySelector(".install-banner");
+    if (existing) {
+      existing.remove();
+      maybeShowInstallBanner();
+    }
+  });
+
   function maybeShowInstallBanner() {
     try { if (localStorage.getItem("printora-install-dismissed")) return; }
     catch (e) { return; }
@@ -907,16 +955,33 @@
     const ua = navigator.userAgent || "";
     const isIOS = /iPhone|iPad|iPod/.test(ua);
     const isAndroid = /Android/.test(ua);
-    if (!isIOS && !isAndroid) return;
+    const canPrompt = !!_deferredInstallPrompt;
+    if (!isIOS && !isAndroid && !canPrompt) return;
 
     const banner = el("div", "install-banner");
-    const how = isIOS
-      ? "Tap <b>Share</b> below → <b>Add to Home Screen</b>"
-      : "Open the <b>⋮ menu</b> → <b>Install app</b>";
-    banner.innerHTML = `
-      <span class="ib-ico">📲</span>
-      <span class="ib-txt"><b>Install Printora</b><small>${how}</small></span>
-      <button class="ib-x" type="button" aria-label="Dismiss">×</button>`;
+    if (canPrompt) {
+      banner.innerHTML = `
+        <span class="ib-ico">📲</span>
+        <span class="ib-txt"><b>Install Printora</b><small>One tap to add to your home screen</small></span>
+        <button class="ib-cta" type="button">Install</button>
+        <button class="ib-x" type="button" aria-label="Dismiss">×</button>`;
+      banner.querySelector(".ib-cta").addEventListener("click", async () => {
+        const p = _deferredInstallPrompt;
+        if (!p) return;
+        _deferredInstallPrompt = null;
+        try { p.prompt(); await p.userChoice; } catch (e) {}
+        banner.classList.remove("show");
+        setTimeout(() => banner.remove(), 400);
+      });
+    } else {
+      const how = isIOS
+        ? "Tap <b>Share</b> below → <b>Add to Home Screen</b>"
+        : "Open the <b>⋮ menu</b> → <b>Install app</b>";
+      banner.innerHTML = `
+        <span class="ib-ico">📲</span>
+        <span class="ib-txt"><b>Install Printora</b><small>${how}</small></span>
+        <button class="ib-x" type="button" aria-label="Dismiss">×</button>`;
+    }
     banner.querySelector(".ib-x").addEventListener("click", () => {
       banner.classList.remove("show");
       try { localStorage.setItem("printora-install-dismissed", "1"); } catch (e) {}
@@ -955,12 +1020,25 @@
     renderProgressInto(pCard);
     view.append(pCard);
 
-    // tip of the day
+    // tip of the day — with a one-shot daily XP claim
     const tip = tipOfTheDay();
     if (tip) {
       const tipCard = el("div", "tip-card");
-      tipCard.innerHTML = `<span class="tip-label">💡 Tip of the Day</span><p>${esc(tip)}</p>`;
+      const claimed = tipClaimedToday();
+      tipCard.innerHTML = `
+        <span class="tip-label">💡 Tip of the Day</span>
+        <p>${esc(tip)}</p>
+        <button class="tip-claim ${claimed ? "claimed" : ""}" type="button">
+          ${claimed ? "✓ Claimed today" : `Got it · +${XP_RULES.tipGotIt} XP`}
+        </button>`;
       view.append(tipCard);
+      const btn = tipCard.querySelector(".tip-claim");
+      btn.addEventListener("click", () => {
+        if (tipClaimedToday()) return;
+        award("tip:" + todayStr(), XP_RULES.tipGotIt);
+        btn.textContent = "✓ Claimed today";
+        btn.classList.add("claimed");
+      });
     }
 
     // search
@@ -1063,7 +1141,7 @@
       r.innerHTML = `<span class="cmp-name">${m.emoji} ${esc(m.name)}</span>
         <span>${bars(m.strength)}</span><span>${bars(m.flexibility)}</span>
         <span>${bars(m.heatResist)}</span><span>${bars(m.ease)}</span>`;
-      r.addEventListener("click", () => go("setups"));
+      r.addEventListener("click", () => go("setups", m.id));
       tbl.append(r);
     });
     view.append(tbl);
@@ -1304,17 +1382,17 @@
       type: "Setup", icon: m.emoji, title: m.name,
       sub: `${m.tagline} · ${m.nozzle} / ${m.bed}`,
       text: [m.name, m.tagline, m.uses.join(" "), m.tips.join(" ")].join(" ").toLowerCase(),
-      go: "setups"
+      go: "setups", openId: m.id
     }));
     DB.guides.forEach((g) => INDEX.push({
       type: "Guide", icon: g.emoji, title: g.title, sub: g.summary,
       text: [g.title, g.summary, g.steps.map((s) => s.h + " " + s.b).join(" "), (g.tips || []).join(" ")].join(" ").toLowerCase(),
-      go: "guides"
+      go: "guides", openId: g.id
     }));
     DB.troubleshooting.forEach((t) => INDEX.push({
       type: "Fix", icon: t.emoji, title: t.symptom, sub: t.fixes[0],
       text: [t.symptom, t.causes.join(" "), t.fixes.join(" ")].join(" ").toLowerCase(),
-      go: "fix"
+      go: "fix", openId: t.id
     }));
     DB.glossary.forEach((g) => INDEX.push({
       type: "Term", icon: "📚", title: g.term, sub: g.def,
@@ -1364,13 +1442,13 @@
       r.innerHTML = `<span class="res-ico">${h.icon}</span>
         <span class="res-txt"><b>${esc(h.title)}</b><small>${esc(h.sub)}</small></span>
         <span class="res-tag">${esc(h.type)}</span>`;
-      r.addEventListener("click", () => go(h.go));
+      r.addEventListener("click", () => go(h.go, h.openId));
       container.append(r);
     });
   }
 
   /* ---------- ROUTER ---------- */
-  function go(route) {
+  function go(route, openId) {
     if (!routes[route]) route = "home";
     window.scrollTo(0, 0);
     routes[route]();
@@ -1381,7 +1459,21 @@
     const active = tabFor[route] || route;
     document.querySelectorAll(".tab").forEach((t) =>
       t.classList.toggle("active", t.dataset.route === active));
-    location.hash = route;
+    location.hash = openId ? `${route}/${openId}` : route;
+    // open & scroll to a specific accordion item (e.g. clicking a compare row)
+    if (openId) {
+      requestAnimationFrame(() => {
+        const target = document.querySelector(`.acc-item[data-id="${openId}"]`);
+        if (target) {
+          const btn = target.querySelector(".acc-head");
+          if (btn && !target.classList.contains("open")) btn.click();
+          if (target.scrollIntoView) {
+            try { target.scrollIntoView({ behavior: "smooth", block: "center" }); }
+            catch (e) {}
+          }
+        }
+      });
+    }
   }
   window.Printora = { go, PROGRESS, ACHIEVEMENTS };
 
@@ -1400,6 +1492,7 @@
   /* ---------- BOOT ---------- */
   buildTabBar();
   updateStreak();
+  awardDailyVisit();
   refreshLevelPill();
   const pillEl = document.getElementById("lvlPill");
   if (pillEl) pillEl.addEventListener("click", () => go("achievements"));
@@ -1408,7 +1501,10 @@
   const themeEl = document.getElementById("themeBtn");
   if (themeEl) themeEl.addEventListener("click", toggleTheme);
   refreshThemeBtn();
-  go((location.hash || "#home").slice(1));
+  {
+    const [r0, id0] = (location.hash || "#home").slice(1).split("/");
+    go(r0, id0);
+  }
   // welcome achievement fires on first ever launch
   checkAchievements();
   // streak-up celebration (only when it actually increments)
@@ -1420,8 +1516,15 @@
   // mobile install banner (dismissable + persistent)
   maybeShowInstallBanner();
   window.addEventListener("hashchange", () => {
-    const r = location.hash.slice(1);
-    if (routes[r]) go(r);
+    const [r, id] = location.hash.slice(1).split("/");
+    if (routes[r]) go(r, id);
+  });
+
+  // three.js is deferred — when it arrives, upgrade the SVG pet to WebGL
+  window.addEventListener("DOMContentLoaded", () => {
+    if (!window.THREE) return;
+    const card = document.getElementById("petScreen");
+    if (card) renderPetInto(card);
   });
 
   // register service worker for offline use + auto-update so new versions
