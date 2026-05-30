@@ -2,17 +2,26 @@
   "name": "Printora — 3D Printing Hub",
   "short_name": "Printora",
   "description": "Your one-stop 3D printing app: filament setups, printables, how-to guides, joining parts, and troubleshooting.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#0f1420",
-  "theme_color": "#0f1420",
+  "background_color": "#5b6c8f",
+  "theme_color": "#5b6c8f",
   "categories": ["productivity", "utilities", "education"],
   "icons": [
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "narrow", "label": "Home screen with pet" }
+  ],
+  "shortcuts": [
+    { "name": "Beginner Hub", "short_name": "Start here", "url": "./#beginners", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Troubleshoot", "short_name": "Fix",        "url": "./#fix",       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Cost Calculator", "short_name": "Calc",    "url": "./#calc",      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

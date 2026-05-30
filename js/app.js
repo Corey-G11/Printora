@@ -1210,8 +1210,36 @@
 
   routes.glossary = function () {
     view.innerHTML = section("Glossary", "Every term, in plain English");
+    // sort alphabetically (digits first → 0-9, then A-Z; falls under "#")
+    const sorted = DB.glossary.slice().sort((a, b) =>
+      a.term.toLowerCase().localeCompare(b.term.toLowerCase())
+    );
+    // alphabet jump-bar
+    const letters = Array.from(new Set(sorted.map((g) =>
+      /^[a-z]/i.test(g.term) ? g.term[0].toUpperCase() : "#"
+    )));
+    const jump = el("div", "gloss-jump");
+    letters.forEach((L) => {
+      const a = el("a", "gloss-jump-a", L);
+      a.href = `#glossary/${L}`;
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const target = document.getElementById("gloss-letter-" + L);
+        if (target && target.scrollIntoView) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      jump.append(a);
+    });
+    view.append(jump);
     const wrap = el("div", "glossary");
-    DB.glossary.forEach((g) => {
+    let lastLetter = null;
+    sorted.forEach((g) => {
+      const L = /^[a-z]/i.test(g.term) ? g.term[0].toUpperCase() : "#";
+      if (L !== lastLetter) {
+        const hdr = el("div", "gloss-letter", esc(L));
+        hdr.id = "gloss-letter-" + L;
+        wrap.append(hdr);
+        lastLetter = L;
+      }
       wrap.append(el("div", "gloss", `<b>${esc(g.term)}</b><span>${esc(g.def)}</span>`));
     });
     view.append(wrap);
@@ -1333,6 +1361,7 @@
     view.append(el("div", "note", `<b>Heads up:</b> ${esc(DB.shop.note)}`));
     DB.shop.categories.forEach((cat) => {
       view.append(el("h2", "h2", `${cat.emoji} ${cat.name}`));
+      if (cat.intro) view.append(el("p", "section-intro", esc(cat.intro)));
       const list = el("div", "grid");
       cat.items.forEach((it) => {
         const a = document.createElement("a");

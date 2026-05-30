@@ -716,6 +716,41 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 
 /* glossary */
 .glossary { display: flex; flex-direction: column; gap: 8px; }
+.gloss-jump {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  background: var(--shell-0);
+  border: 2px solid var(--shell-3);
+  border-radius: 6px;
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 56px); z-index: 5;
+}
+.gloss-jump-a {
+  display: inline-grid; place-items: center;
+  width: 26px; height: 26px;
+  background: var(--lcd-0); color: var(--lcd-pix);
+  border: 2px solid var(--lcd-pix);
+  border-radius: 4px;
+  font-size: 11px; font-weight: 900;
+  text-decoration: none; text-transform: uppercase;
+  font-family: var(--pixel-font);
+  letter-spacing: 0;
+}
+.gloss-jump-a:hover { background: var(--orange); }
+.gloss-letter {
+  font-family: var(--pixel-font);
+  font-size: 16px; font-weight: 900;
+  color: var(--shell-3);
+  background: var(--orange);
+  border: 2px solid var(--shell-3);
+  border-radius: 4px;
+  padding: 4px 12px;
+  display: inline-block;
+  margin: 14px 0 4px;
+  text-transform: uppercase; letter-spacing: 1px;
+  scroll-margin-top: 120px;
+}
+.gloss-letter:first-child { margin-top: 0; }
 .gloss { padding: 12px 14px; }
 .gloss b {
   display: block; font-size: 13px; margin-bottom: 3px;
