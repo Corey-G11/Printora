@@ -365,7 +365,20 @@ DB.glossary = [
   { term: "PEI", def: "The popular spring-steel build-plate coating; smooth or textured variants." },
   { term: "Hygroscopic", def: "Absorbs moisture from the air (Nylon/TPU/PC especially) — dry before printing." },
   { term: "Bowden vs Direct drive", def: "Extruder location: remote (Bowden, light/fast) vs on the hotend (direct, better for flexibles)." },
-  { term: "Heat creep", def: "Heat travelling too far up the hotend, softening filament early and causing jams." }
+  { term: "Heat creep", def: "Heat travelling too far up the hotend, softening filament early and causing jams." },
+  { term: "FDM", def: "Fused Deposition Modeling — the filament-melting style of printing (vs resin/SLA). 95% of hobby printers." },
+  { term: "CoreXY", def: "A motion system where two motors drive X+Y together. Faster, more accurate than bed-slingers. Voron, Bambu X1, Prusa XL." },
+  { term: "Bed slinger", def: "Cartesian printer where the bed moves on the Y-axis. Cheaper, simpler, slightly less precise at speed. Ender 3, Prusa Mk-series." },
+  { term: "Delta", def: "Three-arm tower printer with a single floating effector. Fast circular motion, hard to upgrade." },
+  { term: "Input shaping", def: "Firmware feature that cancels printer vibrations, letting you print 2–3× faster without ringing/ghosting." },
+  { term: "Pressure advance", def: "Klipper's name for Linear Advance — same idea, sharpens corners by pre-compensating nozzle pressure." },
+  { term: "ABL / Auto bed levelling", def: "Probe scans the bed before printing and adjusts Z per-point. BLTouch, inductive, strain-gauge." },
+  { term: "Klipper", def: "Open-source printer firmware that runs on a Raspberry Pi. Faster motion, better tuning, configurable in plain text." },
+  { term: "Voron", def: "An open-source CoreXY printer family you self-source and build. The hobby's gold standard for performance." },
+  { term: "AMS / MMU", def: "Auto Material System (Bambu) / Multi-Material Unit (Prusa) — automated filament swappers for multi-colour printing." },
+  { term: "First layer", def: "Make-or-break — if it sticks well and doesn't squish too thin, your print succeeds. Always watch it." },
+  { term: "Ghosting / Ringing", def: "Echo-like ripples in walls after sharp corners, caused by vibration. Fix with belt tension or input shaping." },
+  { term: "Stringing", def: "Thin filament strands between parts caused by oozing during travel. Fix with retraction or temp tuning." }
 ];
 
 /* ---------- HOME QUICK-REFERENCE CHIPS ---------- */
@@ -664,6 +677,7 @@ DB.shop = {
     {
       name: "Filament",
       emoji: "🧵",
+      intro: "PLA is the safe default — start there, branch out once your first prints stick.",
       items: [
         { name: "Bambu PLA Basic (premium brand)", query: "bambu lab pla basic filament" },
         { name: "PLA filament (1.75 mm)",        query: "pla filament 1.75mm" },
@@ -681,6 +695,7 @@ DB.shop = {
     {
       name: "Nozzles & hotend parts",
       emoji: "🔥",
+      intro: "Brass is cheap and great for PLA/PETG. Switch to hardened steel before printing carbon-fibre or it'll grind your nozzle smooth.",
       items: [
         { name: "Brass 0.4 mm nozzles (assorted)", query: "0.4mm brass nozzle mk8 assortment" },
         { name: "Hardened steel nozzles (CF/GF)",  query: "hardened steel nozzle 0.4mm" },
@@ -693,6 +708,7 @@ DB.shop = {
     {
       name: "Build plates & adhesion",
       emoji: "🧲",
+      intro: "A textured PEI plate solves 80% of first-layer problems. Keep a glue stick around for PETG.",
       items: [
         { name: "PEI textured spring-steel sheet", query: "pei textured spring steel build plate" },
         { name: "Smooth PEI sheet",                query: "smooth pei spring steel build plate" },
@@ -705,6 +721,7 @@ DB.shop = {
     {
       name: "Tools — daily essentials",
       emoji: "🧰",
+      intro: "These five — calipers, hex keys, scraper, flush cutters, tweezers — handle 95% of every-print tasks.",
       items: [
         { name: "Digital calipers (6\")",          query: "digital calipers 150mm stainless" },
         { name: "Metric hex / Allen key set",      query: "metric hex key set ball end" },
@@ -720,6 +737,7 @@ DB.shop = {
     {
       name: "Joining & finishing",
       emoji: "🔩",
+      intro: "Heat-set brass inserts are the difference between a hobby print and a real product. CA + accelerator beats hot glue every time.",
       items: [
         { name: "M3 / M4 heat-set inserts",        query: "m3 m4 heat set inserts brass" },
         { name: "Insert installation tip (iron)",  query: "soldering iron heat set insert tip" },
@@ -734,6 +752,7 @@ DB.shop = {
     {
       name: "Filament care & storage",
       emoji: "🌡️",
+      intro: "Wet filament is the #1 quality killer. A dryer pays for itself within weeks of buying PETG, TPU, or nylon.",
       items: [
         { name: "Filament dryer — Sunlu S2 (1-spool)",   query: "sunlu filament dryer s2" },
         { name: "Filament dryer — Sunlu S4 (4-spool)",   query: "sunlu s4 filament dryer 4 spool" },
@@ -746,6 +765,7 @@ DB.shop = {
     {
       name: "Safety",
       emoji: "🦺",
+      intro: "ABS fumes, sanded plastic dust, and resin all want into your lungs. A few cheap items here saves a lifetime of regret.",
       items: [
         { name: "N95 / N99 mask (sanding & resin)", query: "n95 respirator mask" },
         { name: "Nitrile gloves (resin)",           query: "nitrile gloves 7mil" },
@@ -756,6 +776,7 @@ DB.shop = {
     {
       name: "Printers — entry recommendations",
       emoji: "🖨️",
+      intro: "Best-in-class beginner printers. Bambu's A1 mini is the fastest path from \"unboxing\" to a working first print today.",
       items: [
         { name: "Bambu A1 mini (best beginner)",   query: "bambu lab a1 mini 3d printer" },
         { name: "Bambu A1",                        query: "bambu lab a1 3d printer" },
