@@ -24,12 +24,16 @@
   --cyan: #5b9aa8;
   --violet: #8a7ab8;
   --ok: #5b8a5b;
+  --good: var(--ok);
   --mid: #c69050;
   --hard: #b85a4a;
 
   --txt: var(--lcd-pix);
   --muted: #4a5468;
   --faint: #6a7488;
+
+  /* text on shell-colored backgrounds (inverts in dark mode) */
+  --on-shell: var(--shell-3);
 
   /* difficulty pill backgrounds (paled out) */
   --pill-ok-bg: #b8d0a8;
@@ -69,12 +73,16 @@
   --cyan: #7bd0c0;
   --violet: #b89bd0;
   --ok: #9bd0a0;
+  --good: var(--ok);
   --mid: #ffd28a;
   --hard: var(--pill-hard-bg);
 
   --txt: var(--lcd-pix);
   --muted: #b8c8b8;
   --faint: #8a988a;
+
+  /* text on shell-colored backgrounds — needs to be light in dark mode */
+  --on-shell: #c0cce0;
 
   --pill-ok-bg: #5a7e5e;
   --pill-mid-bg: #806848;
@@ -102,11 +110,13 @@
     --cyan: #7bd0c0;
     --violet: #b89bd0;
     --ok: #9bd0a0;
+    --good: var(--ok);
     --mid: #ffd28a;
     --hard: var(--pill-hard-bg);
     --txt: var(--lcd-pix);
     --muted: #b8c8b8;
     --faint: #8a988a;
+    --on-shell: #c0cce0;
     --pill-ok-bg: #5a7e5e;
     --pill-mid-bg: #806848;
     --pill-hard-bg: #804a48;
@@ -164,7 +174,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   background-image:
     radial-gradient(circle, color-mix(in srgb, var(--shell-3) 25%, transparent) 1px, transparent 1.2px);
   background-size: 6px 6px;
-  opacity: .35;
+  opacity: .45;
   -webkit-mask-image: radial-gradient(120% 80% at 50% 30%, transparent 35%, #000 90%);
   mask-image: radial-gradient(120% 80% at 50% 30%, transparent 35%, #000 90%);
 }
@@ -191,7 +201,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .brand {
   font-size: 18px; font-weight: 900; letter-spacing: 1px;
-  color: var(--shell-3);
+  color: var(--on-shell);
   text-shadow: 2px 2px 0 var(--shell-0);
   text-transform: uppercase;
 }
@@ -203,13 +213,13 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 .page-head { margin: 6px 0 14px; }
 .page-head h1 {
   font-size: 20px; font-weight: 900; letter-spacing: 1px;
-  color: var(--shell-3);
+  color: var(--on-shell);
   text-transform: uppercase;
   text-shadow: 2px 2px 0 var(--shell-0);
 }
 .page-head p {
   margin: 8px 0 0;
-  color: var(--shell-3);
+  color: var(--on-shell);
   font-size: 12px; line-height: 1.5;
   background: var(--shell-0);
   border: 2px solid var(--shell-3);
@@ -217,7 +227,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   padding: 8px 10px;
 }
 .h2 {
-  font-size: 11px; color: var(--shell-3);
+  font-size: 11px; color: var(--on-shell);
   text-transform: uppercase; letter-spacing: 1.5px;
   margin: 22px 0 10px;
   font-weight: 900;
@@ -228,7 +238,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   border-radius: 4px;
 }
 .foot-note {
-  color: var(--shell-3);
+  color: var(--on-shell);
   font-size: 11px;
   margin-top: 18px;
   line-height: 1.6;
@@ -486,11 +496,11 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 .pet-btn {
   background: var(--shell-0);
   border: 3px solid var(--shell-3);
-  border-radius: 14px;
+  border-radius: 8px;
   width: 60px; padding: 8px 4px 6px;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   font-size: 18px;
-  color: var(--shell-3);
+  color: var(--on-shell);
   box-shadow: 0 3px 0 var(--shell-3);
   transition: transform .08s var(--ease), box-shadow .08s;
 }
@@ -500,12 +510,12 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .pet-btn span {
   font-size: 9px; font-weight: 900; letter-spacing: .8px;
-  color: var(--shell-3);
+  color: var(--on-shell);
   text-transform: uppercase;
 }
 .pet-btn-reward {
   font-size: 8.5px; font-weight: 900; letter-spacing: .3px;
-  color: var(--shell-3); opacity: .75;
+  color: var(--on-shell); opacity: .75;
   margin-top: 1px;
 }
 .pet-btn.done {
@@ -580,6 +590,10 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   font-family: var(--pixel-font); font-weight: 700;
 }
 .search input::placeholder { color: var(--faint); }
+.search:focus-within {
+  border-color: var(--orange);
+  box-shadow: 4px 4px 0 var(--orange);
+}
 .search-results { display: flex; flex-direction: column; gap: 8px; }
 .search-results:not(:empty) { margin-top: 10px; }
 .res {
@@ -652,7 +666,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
     inset 0 0 0 1px var(--lcd-1),
     inset 0 -3px 0 var(--lcd-2),
     4px 4px 0 var(--shell-3),
-    0 0 0 2px var(--orange);
+    0 0 0 3px var(--orange);
 }
 .acc-head {
   width: 100%; display: flex; align-items: center; gap: 11px;
@@ -768,7 +782,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   background: var(--shell-0) !important;
   border: 2px solid var(--shell-3) !important;
   box-shadow: none !important;
-  color: var(--shell-3); font-size: 10px; text-transform: uppercase;
+  color: var(--on-shell); font-size: 10px; text-transform: uppercase;
   letter-spacing: 1px; font-weight: 900; padding: 8px;
 }
 .cmp-head::before, .cmp-head::after { display: none; }
@@ -822,7 +836,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 
 /* calculator */
 .calc { display: flex; flex-direction: column; gap: 14px; }
-.calc label { display: flex; flex-direction: column; gap: 6px; font-size: 11px; color: var(--shell-3); font-weight: 900; text-transform: uppercase; letter-spacing: .8px; }
+.calc label { display: flex; flex-direction: column; gap: 6px; font-size: 11px; color: var(--on-shell); font-weight: 900; text-transform: uppercase; letter-spacing: .8px; }
 .calc input { padding: 12px 14px; color: var(--lcd-pix); font-size: 16px; outline: none; font-family: var(--pixel-font); font-weight: 900; }
 .calc input:focus { box-shadow: inset 0 0 0 1px var(--lcd-1), inset 0 -3px 0 var(--lcd-2), 4px 4px 0 var(--orange); }
 .calc-out { padding: 20px; text-align: center; color: var(--muted); font-size: 12px; font-weight: 700; }
@@ -847,7 +861,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   overflow: hidden;
 }
 .tab {
-  flex: 1; background: transparent; border: 0; color: var(--shell-3);
+  flex: 1; background: transparent; border: 0; color: var(--on-shell);
   position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
   font-size: 10px; font-weight: 900; padding: 8px 0;
@@ -869,7 +883,15 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   box-shadow: 0 2px 0 var(--shell-3);
 }
 .tab-lbl { letter-spacing: 1px; font-weight: 900; }
-.tab.active { color: var(--shell-3); }
+.tab.active { color: var(--on-shell); }
+.tab.active::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--orange);
+  border-radius: 0 0 2px 2px;
+}
+.tab.active .tab-lbl { color: var(--orange); }
 .tab.active .tab-ico {
   background: var(--lcd-0);
   filter: none;
@@ -885,7 +907,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 
 /* ---------- section intro paragraph ---------- */
 .section-intro {
-  color: var(--shell-3); font-size: 12px;
+  color: var(--on-shell); font-size: 12px;
   margin: -4px 0 10px; line-height: 1.55;
   font-weight: 700;
   padding: 8px 10px;
@@ -942,7 +964,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
    ============================================================ */
 .level-pill {
   font-size: 10px; font-weight: 900; letter-spacing: .5px;
-  color: var(--shell-3);
+  color: var(--on-shell);
   background: var(--shell-0);
   border: 2.5px solid var(--shell-3);
   border-radius: 4px;
@@ -1021,7 +1043,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   position: relative; z-index: 1;
 }
 .pc-ach {
-  background: var(--shell-0); color: var(--shell-3);
+  background: var(--shell-0); color: var(--on-shell);
   border: 2.5px solid var(--shell-3);
   border-radius: 4px;
   padding: 5px 11px; font-size: 11px; font-weight: 900;
@@ -1086,7 +1108,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .ach-tool-btn {
   flex: 1 1 auto;
-  background: var(--shell-0); color: var(--shell-3);
+  background: var(--shell-0); color: var(--on-shell);
   border: 2.5px solid var(--shell-3);
   border-radius: 6px;
   padding: 10px 12px;
@@ -1123,7 +1145,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .calc-tab {
   flex: 1;
-  background: var(--shell-0); color: var(--shell-3);
+  background: var(--shell-0); color: var(--on-shell);
   border: 2.5px solid var(--shell-3);
   border-radius: 6px;
   padding: 9px 8px;
@@ -1135,6 +1157,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .calc-tab.active {
   background: var(--orange);
+  color: var(--shell-3);
   transform: translate(2px, 2px); box-shadow: none;
 }
 .flow-verdict {
@@ -1175,7 +1198,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   box-shadow: 4px 4px 0 var(--shell-3);
 }
 .ach-card.locked { background: var(--shell-0); border-color: var(--shell-3); filter: grayscale(.7); opacity: .6; }
-.ach-card.locked b, .ach-card.locked small { color: var(--shell-3); }
+.ach-card.locked b, .ach-card.locked small { color: var(--on-shell); }
 .ach-emoji {
   font-size: 26px; width: 46px; height: 46px; flex: none;
   display: grid; place-items: center;
@@ -1199,7 +1222,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   background: var(--shell-0);
   border: 2.5px solid var(--shell-3);
   border-radius: 50%;
-  color: var(--shell-3);
+  color: var(--on-shell);
   font-size: 14px; font-weight: 900;
   cursor: pointer; margin-left: 6px;
   box-shadow: 0 2px 0 var(--shell-3);
@@ -1328,7 +1351,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
 }
 .install-banner .ib-cta:active { transform: translate(2px, 2px); box-shadow: none; }
 .install-banner .ib-x {
-  background: var(--shell-0); color: var(--shell-3);
+  background: var(--shell-0); color: var(--on-shell);
   border: 2.5px solid var(--shell-3);
   border-radius: 4px;
   font-size: 16px; font-weight: 900;
@@ -1394,7 +1417,7 @@ button { font-family: var(--pixel-font); cursor: pointer; letter-spacing: 0.4px;
   transition: transform .08s var(--ease);
 }
 .welcome-skip {
-  background: var(--shell-0); color: var(--shell-3);
+  background: var(--shell-0); color: var(--on-shell);
   border: 2.5px solid var(--shell-3);
   flex: 0 0 35%;
 }
